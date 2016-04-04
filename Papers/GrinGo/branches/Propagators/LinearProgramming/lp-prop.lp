@@ -66,18 +66,18 @@ class Propagator:
                 clit = init.solver_literal(elem.condition_literal)
                 init.add_watch(clit)
                 if koef.args != []:
-                    weights.setdefault(varname,{})[clit] = -koef.args[0].number
+                    weights.setdefault(varname,{})[clit] = -float(str(koef.args[0])[1:-1])
                 else:
-                    weights.setdefault(varname,{})[clit] = koef.number
+                    weights.setdefault(varname,{})[clit] = float(str(koef)[1:-1])
             else:
                 if koef.args != []:
-                    weights[varname] = -koef.args[0].number
+                    weights[varname] = -float(str(koef.args[0])[1:-1])
                 else:
-                    weights[varname] = koef.number
+                    weights[varname] = float(str(koef)[1:-1])
         if rhs.args != []:
-            self.__structure.setdefault(lit,[]).append((dict(weights),rel,-rhs.args[0].number))
+            self.__structure.setdefault(lit,[]).append((dict(weights),rel,-float(str(rhs.args[0])[1:-1])))
         else:
-            self.__structure.setdefault(lit,[]).append((dict(weights),rel,rhs.number))
+            self.__structure.setdefault(lit,[]).append((dict(weights),rel,float(str(rhs)[1:-1])))
 
 
 
@@ -92,9 +92,9 @@ class Propagator:
             varname = elem.terms[0].args[1].name
             koef = elem.terms[0].args[0]
             if koef.args != []:
-                self.__objective.append(-koef.args[0].number)
+                self.__objective.append(-float(str(koef.args[0])[1:-1]))
             else:
-                self.__objective.append(koef.number)
+                self.__objective.append(float(str(koef)[1:-1]))
             if varname not in self.__varpos: 
                 col_pos = col_pos+1
                 self.__varpos[varname] = col_pos
@@ -107,16 +107,16 @@ class Propagator:
             lb = 'none'
         else:
             if atom.elements[1].terms[0].args != []:
-                lb = -atom.elements[1].terms[0].args[0].number
+                lb = -float(str(atom.elements[1].terms[0].args[0])[1:-1])
             else:
-                lb = atom.elements[1].terms[0].number
+                lb = float(str(atom.elements[1].terms[0])[1:-1])
         if str(atom.elements[2].terms[0]) == 'none':
             ub = 'none'
         else:
             if atom.elements[2].terms[0].args != []:
-                ub = -atom.elements[2].terms[0].args[0].number
+                ub = -float(str(atom.elements[2].terms[0].args[0])[1:-1])
             else:
-                ub = atom.elements[2].terms[0].number
+                ub = float(str(atom.elements[2].terms[0])[1:-1])
         self.__bounds[varname] = (lb,ub)
 
 
