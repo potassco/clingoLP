@@ -1,0 +1,13 @@
+
+vB = v3
+v3 = v1
+2v1 = v4 + v2
+v2 = v3
+v4 = v5
+v4 = v2
+v5 = vBiomass
+
+vBiomass > 0
+
+
+S.v = 0 at steady state
