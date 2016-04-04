@@ -27,7 +27,7 @@ extract to ~/.local/lib/python2.7/site-packages/
 
 
 
-Now you can use lpsolve.lp for your encoding.
+Now you can use lp-prop.lp and theory_lp.lp for your encoding.
 
 Your encoding has to follow the structure given in example1.lp 
 
