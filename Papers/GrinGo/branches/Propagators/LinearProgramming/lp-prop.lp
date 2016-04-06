@@ -24,9 +24,9 @@ class Propagator:
 
 
     def __init__(self, trace):
-        self.__structure = {}           # {literal:[(weights,guard,const)]}
+        self.__structure = {}           # {literal : [(weights,guard,const)]}
         self.__states = []              # [state]
-        self.__objective = []           # [weights]
+        self.__objective = {}           # {varname : [weight or {clit : weight}]}
         self.__optim = ''               # min or max
         self.__bounds = {}              # {varname : (lower bound, upper bound)}
         self.__varpos = {}              # {varname : var_pos}
@@ -43,7 +43,7 @@ class Propagator:
             if term.name == 'lp':
                 self.__lp_structure(atom, init)
             if term.name == 'objective':
-                self.__lp_objective(atom)
+                self.__lp_objective(atom, init)
             if term.name == 'dom':
                 self.__lp_domain(atom)
 
@@ -65,15 +65,18 @@ class Propagator:
             if elem.condition != []:
                 clit = init.solver_literal(elem.condition_literal)
                 init.add_watch(clit)
+                tmp = {}
                 if koef.args != []:
-                    weights.setdefault(varname,{})[clit] = -float(str(koef.args[0])[1:-1])
+                    tmp[clit] = -float(str(koef.args[0])[1:-1])
+                    weights.setdefault(varname,[]).append(tmp)
                 else:
-                    weights.setdefault(varname,{})[clit] = float(str(koef)[1:-1])
+                    tmp[clit] = float(str(koef)[1:-1])
+                    weights.setdefault(varname,[]).append(tmp)
             else:
                 if koef.args != []:
-                    weights[varname] = -float(str(koef.args[0])[1:-1])
+                    weights.setdefault(varname,[]).append(-float(str(koef.args[0])[1:-1]))
                 else:
-                    weights[varname] = float(str(koef)[1:-1])
+                    weights.setdefault(varname,[]).append(float(str(koef)[1:-1]))
         if rhs.args != []:
             self.__structure.setdefault(lit,[]).append((dict(weights),rel,-float(str(rhs.args[0])[1:-1])))
         else:
@@ -81,9 +84,9 @@ class Propagator:
 
 
 
-    def __lp_objective(self, atom):
-        obj = atom.elements
-        col_pos = 0
+    def __lp_objective(self, atom, init):
+        obj = atom.elements 
+        col_pos = len(self.__varpos) 
         self.__optim = str(atom.term.args[0])
         for elem in obj:
             pol = 1
@@ -91,13 +94,24 @@ class Propagator:
                 pol = -1
             varname = elem.terms[0].args[1].name
             koef = elem.terms[0].args[0]
-            if koef.args != []:
-                self.__objective.append(-float(str(koef.args[0])[1:-1]))
+            if elem.condition != []:
+                clit = init.solver_literal(elem.condition_literal)
+                init.add_watch(clit) 
+                tmp = {}
+                if koef.args != []:
+                    tmp[clit] = -float(str(koef.args[0])[1:-1])
+                    self.__objective.setdefault(varname,[]).append(tmp)
+                else:
+                    tmp[clit] = float(str(koef)[1:-1])
+                    self.__objective.setdefault(varname,[]).append(tmp)
             else:
-                self.__objective.append(float(str(koef)[1:-1]))
-            if varname not in self.__varpos: 
-                col_pos = col_pos+1
-                self.__varpos[varname] = col_pos
+                if koef.args != []:
+                    self.__objective.setdefault(varname,[]).append(-float(str(koef.args[0])[1:-1]))
+                else:
+                    self.__objective.setdefault(varname,[]).append(float(str(koef)[1:-1]))
+                if varname not in self.__varpos: 
+                    col_pos = col_pos+1
+                    self.__varpos[varname] = col_pos
 
 
 
@@ -125,7 +139,21 @@ class Propagator:
         clist = []                      # [(trow, rel, b)]
         varpos = dict(self.__varpos)    # {varname : col_pos}
         col_pos = len(varpos)           # len of opt vars
-        fopt = self.__objective[:]      # copy static wopt
+        wopt = {}                       # {varname : weight}
+        for varname in self.__objective:
+            tmp = 0
+            for weight in self.__objective[varname]:
+                if not isinstance(weight, dict):
+                    tmp = tmp + weight
+                else:
+                    for clit in weight:
+                        if clit in state.cond_trail:
+                            tmp = tmp + weight[clit]
+            if tmp != 0: 
+                if varname not in varpos:
+                    col_pos = col_pos +1
+                    varpos[varname] = col_pos 
+                wopt[varname] = tmp
         nconstr = 0
         for lit in state.lp_trail:
             for constr in self.__structure[lit]:
@@ -134,19 +162,20 @@ class Propagator:
                 rel = constr[1]
                 b = constr[2] 
                 for varname in constr[0]:
-                    weight = 0
-                    if not isinstance(constr[0][varname], dict):
-                        weight = constr[0][varname]
-                    else:
-                        for clit in constr[0][varname]:
-                            if clit in state.cond_trail:
-                                weight = weight + constr[0][varname][clit]
-                    if weight != 0:
+                    tmp = 0
+                    for weight in constr[0][varname]:
+                        if not isinstance(weight, dict):
+                            tmp = tmp + weight
+                        else:
+                            for clit in weight:
+                                if clit in state.cond_trail:
+                                    tmp = tmp + weight[clit]
+                    if tmp != 0:
                         if varname not in varpos: 
                             col_pos = col_pos+1
                             varpos[varname] = col_pos
-                            fopt.append(0)
-                        trow[varname] = weight
+                            wopt[varname] = 0
+                        trow[varname] = tmp
                 if rel == '<':
                     rel = '<='
                     b = b - self.__epsilon
@@ -155,6 +184,9 @@ class Propagator:
                     b = b + self.__epsilon
                 clist.append((trow, rel, b))
         nvar = len(varpos)
+        fopt = [0]*nvar
+        for varname in varpos:
+            fopt[varpos[varname]-1] = wopt[varname]
         lp = lpsolve('make_lp', nconstr, nvar)
         lpsolve('set_verbose', lp, IMPORTANT)
         for constr in clist:
