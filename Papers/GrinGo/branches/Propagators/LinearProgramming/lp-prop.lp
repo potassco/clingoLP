@@ -214,7 +214,12 @@ class Propagator:
             lpsolve('delete_lp', lp) 
             return False
         sdict = {}
-        slist = lpsolve('get_variables', lp)[0]
+        slist = [] 
+        res = lpsolve('get_variables', lp)[0]
+        if isinstance(res, float):
+            slist.append(res)
+        else:
+            slist.extend(res)
         for var in varpos:
             sdict[var] = slist[varpos[var]-1]
         state.solution = (lpsolve('get_objective', lp), sdict)
