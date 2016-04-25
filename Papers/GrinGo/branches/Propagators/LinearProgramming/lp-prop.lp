@@ -380,10 +380,10 @@ class Propagator:
 
 
 
-    def propagate(self, control, assign, changes):
-        state = self.__state(control.id)
-        if len(state.stack) == 0 or state.stack[-1][0] < assign.decision_level:
-            state.stack.append((assign.decision_level, len(state.lp_trail), len(state.cond_trail)))
+    def propagate(self, control, changes):
+        state = self.__state(control.thread_id)
+        if len(state.stack) == 0 or state.stack[-1][0] < control.assignment.decision_level:
+            state.stack.append((control.assignment.decision_level, len(state.lp_trail), len(state.cond_trail)))
         for lit in changes:
             if lit in self.__structure:
                 state.lp_trail_old = state.lp_trail[:]
@@ -400,8 +400,8 @@ class Propagator:
 
 
 
-    def undo(self, solver_id, undo): 
-        state = self.__state(solver_id)
+    def undo(self, thread_id, assign, changes): 
+        state = self.__state(thread_id)
         lpid = state.stack[-1][1]
         del state.lp_trail[lpid:]
         cid = state.stack[-1][2]
@@ -410,8 +410,8 @@ class Propagator:
 
 
 
-    def check(self, control, assign):
-        state = self.__state(control.id)
+    def check(self, control):
+        state = self.__state(control.thread_id)
         self.s_out.append(state.solution)
         print '---------------------------------' 
         if self.__show:
