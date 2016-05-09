@@ -1,7 +1,6 @@
 #script (python)
 
 from lp_solve import *
-import gringo
 import sys
 
 class Propagator:
