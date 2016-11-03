@@ -13,9 +13,8 @@
     };
 
     &lp/0   : lin_term, {<=,>=,>,<,!=,=}, lin_term, any;
-    &objective/1 : lin_term, directive;
-    &dom/0 : bounds, head;
-    &show/0 : show_term, directive
+    &objective/1 : lin_term, head;
+    &dom/0 : bounds, head
 }.
 
 
