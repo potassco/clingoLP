@@ -42,21 +42,17 @@ clingo-banane example1.lp --const show=1 --const accuracy=3
 Usage to solve biological networks
 ----------------------------------
 1.) 
-To generate ASP facts from *.smbl and *.xml files use flux-converter.py as follows:
+To generate ASP facts from *.smbl and *.xml files use flux_converter.py as follows:
 
-python flux-converter.py -i <inputfiles> -o <outputfile>'
+python flux_converter.py <draft_inputfile> <repair_inputfile> <outputfile>
 
 Note: 
-Gapfill encoding based on facts with tags s_*, t_*, d_* and r_*, which obtained as follows
-- seeds outputfile need to have substring "seeds"
-- targets outputfile need to have substring "targets"
-- degraded outputfile need to have substring "degraded" or "draft"
-- repair outputfile need to have substring "reconstructed" or "repair" or "bdd"
-else facts with tag lp_* are created.
+Encoding based on facts with tags s_*, t_*, d_* and r_*, which obtained as follows.
 
 Example:
 
 python flux-converter.py -i seeds.smbl -o seeds.lp
+
 
 2.)
 Solve instances:
