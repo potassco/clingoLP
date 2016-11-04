@@ -4,7 +4,8 @@ import sys
 # import re
 import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import XML, fromstring, tostring
-from pyasp.asp import *
+#from pyasp.asp import *
+import clingo
 import argparse
 
 
@@ -22,9 +23,21 @@ def main(all_args):
 
     draftnet, seeds, targets = readSBMLnetwork(draft_sbml, 'd')
     repairnet = readSBMLnetwork(repair_sbml, 'r')[0]
+    
+    with open(output_file + '_draft.lp','w') as f:
+        for fact in draftnet:
+            #print fact
+            f.write(str(fact) + '.\n')
+            #print(clingo.String(fact) + '\n')
 
-    draftnet.to_file(output_file + '_draft.lp')
-    repairnet.to_file(output_file + '_repair.lp')
+    with open(output_file + '_repair.lp','w') as g:
+        for fact in repairnet:
+            g.write(str(fact) + '.\n')
+            #print(clingo.String(fact) + '\n')
+
+        
+    #draftnet.to_file(output_file + '_draft.lp')
+    #repairnet.to_file(output_file + '_repair.lp')
     #print(repairnet)
 
     return
@@ -122,7 +135,7 @@ def get_listOfParameters(reaction):
 def readSBMLnetwork(filename, prefix) :
     """ create lp facts for the network from SBML """
 
-    lpfacts         = TermSet()
+    lpfacts         = []
     tree            = etree.parse(filename)
     sbml            = tree.getroot()
     model           = get_model(sbml)
@@ -135,7 +148,7 @@ def readSBMLnetwork(filename, prefix) :
     species_data = {}
     added_species = []
 
-    # lpfacts.add(Term(name,["\""+name+"\""])
+    # lpfacts.add(Term(name,[name])
 
     # get list of species
     for e in listOfSpecies:
@@ -150,7 +163,7 @@ def readSBMLnetwork(filename, prefix) :
             # only add seeds if the BC true compound is in the draft, not the repair database
             if speciesBC == "true" and prefix == 'd':
                 seeds.append(speciesId)
-                lpfacts.add(Term('s_compound', ["\""+speciesId+"\"", "\""+speciesCp+"\"", "\""+speciesBC+"\""]))
+                lpfacts.append(clingo.Function('s_compound', [speciesId, speciesCp, speciesBC])) 
                 if not speciesId in species_data:
                     species_data[speciesId] = {'compartment':speciesCp, 'boundaryCondition':speciesBC}
                 else:
@@ -218,23 +231,23 @@ def readSBMLnetwork(filename, prefix) :
                 print("Had to set upper bound to default value " + str(default_ub) + " for reaction " + reactionId)
 
             if (lb < 0 and ub > 0) or (lb > 0 and ub < 0):
-                lpfacts.add(Term('reversible', ["\""+reactionId+"\""]))
-
+                lpfacts.append(clingo.Function('reversible', [reactionId]))
+                
             if oc == None:
                 oc = default_oc
                 print("Had to set objective coefficient to default value " + str(default_oc) + " for reaction " + reactionId)
 
             # make facts for an objective reaction
             if obj_fnct and prefix == 'd':
-                lpfacts.add(Term('t_reaction', ["\""+reactionId+"\""]))
-                lpfacts.add(Term('t_objective', ["\""+reactionId+"\"","\""+str(oc)+"\""]))
-                lpfacts.add(Term('t_bounds', ["\""+reactionId+"\"","\""+str(lb)+"\"","\""+str(ub)+"\""]))
-
+                lpfacts.append(clingo.Function('t_reaction', [reactionId]))
+                lpfacts.append(clingo.Function('t_objective', [reactionId,str(oc)]))
+                lpfacts.append(clingo.Function('t_bounds', [reactionId,str(lb),str(ub)]))
+                
             # make facts for a regular reaction
             else:
-                lpfacts.add(Term(prefix+'_reaction', ["\""+reactionId+"\""]))
-                lpfacts.add(Term(prefix+'_objective', ["\""+reactionId+"\"","\""+str(oc)+"\""]))
-                lpfacts.add(Term(prefix+'_bounds', ["\""+reactionId+"\"","\""+str(lb)+"\"","\""+str(ub)+"\""]))
+                lpfacts.append(clingo.Function(prefix+'_reaction', [reactionId]))
+                lpfacts.append(clingo.Function(prefix+'_objective', [reactionId,str(oc)]))
+                lpfacts.append(clingo.Function(prefix+'_bounds', [reactionId,str(lb),str(ub)]))
 
             # get reactants of considered reactin
             listOfReactants = get_listOfReactants(e)
@@ -252,19 +265,20 @@ def readSBMLnetwork(filename, prefix) :
                     # define reactant diferently if reaction is objective function
                     if obj_fnct and prefix == 'd':
                         targets.append(reactantId)
-                        lpfacts.add(Term('t_reactant', ["\""+reactantId+"\"","\""+r.attrib.get("stoichiometry")+"\"", "\""+reactionId+"\""]))
+                        lpfacts.append(clingo.Function('t_reactant', [reactantId,r.attrib.get("stoichiometry"), reactionId]))
                     # else just add the reactant
                     else:
-                        lpfacts.add(Term(prefix+'_reactant', ["\""+reactantId+"\"","\""+r.attrib.get("stoichiometry")+"\"", "\""+reactionId+"\""]))
+                        lpfacts.append(clingo.Function(prefix+'_reactant', [reactantId,r.attrib.get("stoichiometry"), reactionId]))
 
                     # add the r_compound or d_compound if not already done for this compound
                     if not reactantId in added_species:
                         try:
-                            lpfacts.add(Term(prefix+'_compound', ["\""+reactantId+"\"", "\""+species_data[reactantId]['compartment']+"\"", "\""+species_data[reactantId]['boundaryCondition']+"\""]))
+                            lpfacts.append(clingo.Function(prefix+'_compound', [reactantId, species_data[reactantId]['compartment'], species_data[reactantId]['boundaryCondition']]))
                             added_species.append(reactantId)
                         except KeyError:
                             added_species.append(reactantId)
                             print(productId, reactionId)
+                        pass
 
             # get products of considered reaction
             listOfProducts = get_listOfProducts(e)
@@ -276,11 +290,11 @@ def readSBMLnetwork(filename, prefix) :
                     productId = p.attrib.get("species")
                     # define product diferently if reaction is objective function
                     if obj_fnct and prefix == 'd':
-                        lpfacts.add(Term('t_product', ["\""+productId+"\"", "\""+p.attrib.get("stoichiometry")+"\"", "\""+reactionId+"\""]))
-                        lpfacts.add(Term('t_compound', ["\""+productId+"\"", "\""+p.attrib.get("stoichiometry")+"\"", "\""+reactionId+"\""]))
+                        lpfacts.append(clingo.Function('t_product', [productId, p.attrib.get("stoichiometry"), reactionId]))
+                        lpfacts.append(clingo.Function('t_compound', [productId, p.attrib.get("stoichiometry"), reactionId]))
                         # add the t_compound
                         try:
-                            lpfacts.add(Term('t_compound', ["\""+productId+"\"", "\""+species_data[productId]['compartment']+"\"", "\""+species_data[productId]['boundaryCondition']+"\""]))
+                            lpfacts.append(clingo.Function('t_compound', [productId, species_data[productId]['compartment'], species_data[productId]['boundaryCondition']]))
                         except KeyError:
                             print('Error: product ' + productId + 'of the objective reaction '+ reactionId + ' is not defined in list of species')
                             quit()
@@ -289,15 +303,16 @@ def readSBMLnetwork(filename, prefix) :
                             added_species.append(productId)
                     # else just add the product
                     else:
-                        lpfacts.add(Term(prefix+'_product', ["\""+productId+"\"", "\""+p.attrib.get("stoichiometry")+"\"", "\""+reactionId+"\""]))
+                        lpfacts.append(clingo.Function(prefix+'_product', [productId, p.attrib.get("stoichiometry"), reactionId]))
                         # add the r_compound or d_compound in the facts if not already done for this compound
                         if not productId in added_species:
                             try:
-                                lpfacts.add(Term(prefix+'_compound', ["\""+productId+"\"", "\""+species_data[productId]['compartment']+"\"", "\""+species_data[productId]['boundaryCondition']+"\""]))
+                                lpfacts.append(clingo.Function(prefix+'_compound', [productId, species_data[productId]['compartment'], species_data[productId]['boundaryCondition']]))
                                 added_species.append(productId)
                             except KeyError:
                                 added_species.append(productId)
                                 print(productId, reactionId)
+                            pass
 
 
     #some checks to alert the user
