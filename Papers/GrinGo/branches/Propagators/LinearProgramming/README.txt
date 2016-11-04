@@ -25,6 +25,12 @@ extract to ~/.local/lib/python2.7/site-packages/
 
 
 
+Set python path with clingo python module
+-----------------------------------------
+for example
+export PYTHONPATH=/home/wv/bin/linux/64/lib/pyclingo-banane
+
+
 
 General usage of ASPmLP
 -----------------------
@@ -44,14 +50,16 @@ Usage to solve biological networks
 1.) 
 To generate ASP facts from *.smbl and *.xml files use flux_converter.py as follows:
 
-python flux_converter.py <draft_inputfile> <repair_inputfile> <outputfile>
+python flux_converter.py -d <draft_inputfile> -r <repair_inputfile> -o <outputfile>
+
+The output would be a '<outputfile>_draft.lp' and '<outputfile>_repair.lp'.
 
 Note: 
-Encoding based on facts with tags s_*, t_*, d_* and r_*, which obtained as follows.
+Encoding based on facts with tags s_*, t_*, d_* and r_*.
 
 Example:
 
-python flux-converter.py -i seeds.smbl -o seeds.lp
+python flux_converter.py -d draft.xml -r repair.xml -o facts
 
 
 2.)
