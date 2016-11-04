@@ -15,7 +15,7 @@
 
 % nodes
 s_node(N) :- s_compound(N,_,_).
-t_node(N) :- t_compound(N,_,_).
+t_node(N) :- d_compound(N,_,_), t_reactant(N,_,R).
 
 
 % draft information
