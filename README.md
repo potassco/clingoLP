@@ -17,7 +17,7 @@ Script:
     * Includes teory_lp.lp to define the language for the propagator
         * w_1*x_1+...+w_nx_n >= k --> &lp{"w_1"*x_1;...;"w_n"*x_n} >= "k"
         * domain(x)={l,...,u} --> &dom{(x,"l","u")}
-        * objective maximize function f_max(w_1*x_1+...+w_nx_n) --> &obj(max){"w_1"*x_1;...;"w_n"*x_n} (minimize analogous)
+        * objective maximize function f_max(w_1*x_1+...+w_nx_n) --> &objective(max){"w_1"*x_1;...;"w_n"*x_n} (minimize analogous)
     * Options 
         * All clingo options
         * Number solutions controlled via clingo 
