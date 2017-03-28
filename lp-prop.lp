@@ -3,21 +3,21 @@
 % option data defaults
 #const show=0.
 #const accuracy=1.
-#const epsilon=(1,5).
-#const nstrict=0.
+#const epsilon=(1,3). % similar to cplex default
+#const nstrict=1.
 #const solver=cplx.
 #const trace=0.
-#const core_confl=100.
+#const core_confl=20.
 #const prop_heur=0.
 #const debug=0.
+#const ilp=0.
+
 
 #script (python)
 
-#TODO ilp: - lpsolve(lp, column,'must_be_int') (?) for variables !!!!!!! http://lpsolve.sourceforge.net/5.5/set_int.htm
-
 import sys
 import time
-
+    
 
 class Propagator:
 
@@ -31,7 +31,7 @@ class Propagator:
             self.eqlit = {}             # {cnum : nlit}
             self.eqlit_inv = {}         # {nlit : cnum}
             self.clist = {}             # {cnum : ({varname : weights}, rel, brow)}
-            self.active_cnum = {}       # {cnum : [clit_undec, truth_value]}
+            self.active_cnum = {}       # {cnum : [clit_undec, truth_value, nlit_introduced]}
             self.recent_active = []     # [cnum]
             self.total_lits = 0
             self.oclit_trail = []       # [oclits]
@@ -39,31 +39,78 @@ class Propagator:
             self.active_oclit = 0       # number of undec oclits
             self.lits_current = 0       # number of decided watched literals
             self.lp = None              # lpsolve object  
+            self.current_assignment = None
+            self.stats = ''
+            self.times = (0,0,0,0,0,0)  # (scalls, stime, addcalls, addtime, resetcalls, resettime)
+            self.times_print = ''
 
+
+        def save_assignment(self, accuracy):
+            self.current_assignment = self.lp.get_solution(accuracy)
+
+
+        def save_stats(self, solver, debug, initcalls, inittime, propcalls, proptime, undocalls, undotime, checkcalls, checktime):
+            self.stats = self.lp.get_stats()
+            if solver == 'lps':
+                if self.lp.get_time() != 'Error' and self.lp.get_time() != 'Unsat':
+                    times = self.lp.get_time()
+                    self.times = (self.times[0] + times[0], self.times[1] + times[1], self.times[2] + times[2], self.times[3] + times[3], self.times[4] + times[4], self.times[5] + times[5])
+                self.times_print = 'LP solver calls: ' + str(self.times[0]) + '   Time lp_solve :  ' + str(self.times[1]) + '\n'
+            elif solver == 'cplx':
+                if self.lp.get_time() != 'Error' and self.lp.get_time() != 'Unsat':
+                    times = self.lp.get_time()
+                    self.times = (self.times[0] + times[0], self.times[1] + times[1], self.times[2] + times[2], self.times[3] + times[3], self.times[4] + times[4], self.times[5] + times[5])
+                self.times_print = 'LP solver calls: ' + str(self.times[0]) + '   Time cplex :  ' + str(self.times[1]) + '\n'
+            if debug > 0:
+                self.times_print = self.times_print + '\n' + 'Calls init: ' + str(initcalls) + '      Time init:  ' + str(inittime) + '\n' + 'Calls propagate: ' + str(propcalls) + '      Time propagate:  ' + str(proptime) + '\n' + 'Calls undo: ' + str(undocalls) + '      Time undo:  ' + str(undotime) + '\n' + 'Calls add: ' + str(self.times[2]) + '      Time add:  ' + str(self.times[3]) + '\n' + 'Calls reset: ' + str(self.times[4]) + '      Time reset:  ' + str(self.times[5]) + '\n' + 'Calls check: ' + str(checkcalls) + '      Time check:  ' + str(checktime)
+
+
+
+        def print_assignment(self, show):
+            print ''
+            print 'LP Solver output'
+            if show:
+                print self.stats 
+                print ''
+                print 'solution'
+                print self.current_assignment
+                print ''
+                print self.times_print
+                print ''
+            else:
+                print self.current_assignment
+                print ''
+                print self.times_print
+                print ''
 
 
     def __state(self, sid): 
         while len(self.__states) <= sid:
             self.__states.append(Propagator.State())
             state = self.__states[len(self.__states)-1]
-            state.total_lits = self.__lits_total_num
-            for cnum in self.__constr:
+            self.update_state_info(state)
+        return self.__states[sid]
+
+
+    def update_state_info(self, state):
+        state.total_lits = self.__lits_total_num
+        for cnum in self.__constr: 
+            if not cnum in state.active_cnum:
                 if not cnum in self.__constr_clit:
                     state.active_cnum[cnum] = [0,0,0]
                 else:
                     state.active_cnum[cnum] = [len(self.__constr_clit[cnum]),0,0]
-            state.active_oclit = len(self.__obj_cond_lit)
-            try:
-                lp_solver_class = globals()[self.__solver] 
-                state.lp = lp_solver_class(self.__varpos, self.__bounds)
-            except:
-                print 'No wrapper class of ', self.__solver, ' found!'
-                exit()
-        return self.__states[sid]
+        state.active_oclit = len(self.__obj_cond_lit)
+        try:
+            lp_solver_class = globals()[self.__solver] 
+            state.lp = lp_solver_class(self.__varpos, self.__bounds, self.__ilp)
+        except:
+            print 'No wrapper class of ', self.__solver, ' found!'
+            exit()
 
 
 
-    def __init__(self, show, accuracy, nstrict, epsilon, solver, trace, core_confl, prop_heur, debug):
+    def __init__(self, show, accuracy, nstrict, epsilon, solver, trace, core_confl, prop_heur, debug, ilp):      
         self.__var_ta = {}              # {abs(lit) : [cnum]}
         self.__lit_ta = {}              # {lit : [cnum]}
         self.__constr = {}              # {cnum : (lit,constr)}
@@ -72,8 +119,8 @@ class Propagator:
         self.__states = []              # [state]
         self.__objective = {}           # {varname : [weight or {clit : weight}]}
         self.__obj_cond_lit = set()     # {objclit}
-        self.__optim = ''               # min or max
-        self.__bounds = {}              # {varname : (lower bound, upper bound)}
+        self.__optim = ''               # min or max (depends on first input)
+        self.__bounds = {}              # {varname : [(lower bound, upper bound)]}
         self.__varpos = {}              # {varname : var_pos}
         self.__vars = set()             # {vars} 
         self.__wopt = {}                # {varname : weight}
@@ -101,7 +148,7 @@ class Propagator:
         else:
             self.__nstrict = True
         if 'None' == str(epsilon): # epsilon=(a,b) -> a*10^-b
-            self.__epsilon = 0.00001 #sys.float_info.epsilon*10 is too low -> round problems
+            self.__epsilon = 0.001 
         else:
             tmp = str(epsilon)[1:-1].split(",")
             koef = float(tmp[0])
@@ -124,19 +171,28 @@ class Propagator:
             self.__debug = 0
         else:
             self.__debug = debug.number
-
+        if 'None' == str(ilp) or ilp.number != 1:
+            self.__ilp = False
+        else:
+            self.__ilp = True
+            self.__epsilon = 1   
 
 
     def init(self, init):
         start = time.clock()
         for atom in init.theory_atoms:
             term = atom.term
-            if term.name == 'lp':
+            if term.name == 'lp' or term.name == 'sum':
                 self.__lp_structure(atom, init)
-            if term.name == 'objective':
+            if term.name == 'objective' or term.name == 'minimize' or term.name == 'maximize':
                 self.__lp_objective(atom, init)
             if term.name == 'dom':
                 self.__lp_domain(atom)
+        if len(self.__obj_cond_lit) == 0:
+            for varname in self.__objective:
+                weight = sum(self.__objective[varname])
+                if weight != 0:
+                    self.__wopt[varname] = weight
         self.__lits_total_num = len(self.__lits_total)
         col_pos = 0
         for varname in self.__vars:
@@ -147,6 +203,11 @@ class Propagator:
         self.__initcalls += 1
         self.__time = self.__time + end-start
 
+
+
+    def print_assignment(self, thread_id):
+        state = self.__state(thread_id)
+        state.print_assignment(self.__show)
 
 
     # resolves structure of lp-statements and saves it
@@ -162,12 +223,19 @@ class Propagator:
         rhs = atom.guard[1]
         rel = atom.guard[0]
         for elem in lhs:
-            if elem.terms[0].arguments[1].arguments == []:
-                varname = elem.terms[0].arguments[1].name
+            if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*': 
+                koef = self.__calc_bound(elem.terms[0].arguments[0])
+                if elem.terms[0].arguments[1].arguments == []:
+                    varname = elem.terms[0].arguments[1].name
+                else:
+                    varname = str(elem.terms[0].arguments[1])
             else:
-                varname = str(elem.terms[0].arguments[1])
+                koef = 1
+                if elem.terms[0].arguments == []:
+                    varname = elem.terms[0].name
+                else:
+                    varname = str(elem.terms[0])
             self.__vars.add(varname)
-            koef = self.__calc_bound(elem.terms[0].arguments[0])
             if elem.condition != []:
                 clit = init.solver_literal(elem.condition_id) 
                 init.add_watch(clit)
@@ -182,7 +250,10 @@ class Propagator:
                     self.__constr_clit[n].append(aclit) 
                     self.__constr_clit[n] = list(set(self.__constr_clit[n]))
                 tmp = {}
-                tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
+                if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
+                    tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
+                else: 
+                    tmp[clit] = 1
                 weights.setdefault(varname,[]).append(tmp)
             else:
                 weights.setdefault(varname,[]).append(koef)
@@ -195,11 +266,41 @@ class Propagator:
     # resolves structure of objective-statements and saves it
     def __lp_objective(self, atom, init):
         obj = atom.elements
-        self.__optim = str(atom.term.arguments[0])
+        mode = ''
+        if atom.term.name == 'objective': ## at some point not longer part of syntax!
+            mode = str(atom.term.arguments[0])
+            if self.__optim == '':
+                self.__optim = mode
+        if atom.term.name == 'maximize':
+            mode = 'max'
+            if self.__optim == '':
+                self.__optim = mode
+        if atom.term.name == 'minimize':
+            mode = 'min'
+            if self.__optim == '':
+                self.__optim = mode
+        if mode == self.__optim:
+            pol = 1
+        else:
+            pol = -1
+        self.__set_objective(init,obj,pol)
+
+
+    def __set_objective(self,init, obj,pol):
         for elem in obj:
-            varname = elem.terms[0].arguments[1].name
+            if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*': 
+                koef = self.__calc_bound(elem.terms[0].arguments[0]) 
+                if elem.terms[0].arguments[1].arguments == []:
+                    varname = elem.terms[0].arguments[1].name
+                else:
+                    varname = str(elem.terms[0].arguments[1])
+            else:
+                koef = 1
+                if elem.terms[0].arguments == []:
+                    varname = elem.terms[0].name
+                else:
+                    varname = str(elem.terms[0])
             self.__vars.add(varname)
-            koef = self.__calc_bound(elem.terms[0].arguments[0])
             if elem.condition != []:
                 clit = init.solver_literal(elem.condition_id)
                 aclit = abs(clit)
@@ -208,33 +309,28 @@ class Propagator:
                 self.__lits_total.add(aclit)
                 self.__obj_cond_lit.add(aclit)
                 tmp = {}
-                tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
+                if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
+                    tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
+                else: 
+                    tmp[clit] = 1
                 self.__objective.setdefault(varname,[]).append(tmp)
-            else:
-                self.__objective.setdefault(varname,[]).append(koef)
-        if len(self.__obj_cond_lit) == 0:
-            for varname in self.__objective:
-                weight = sum(self.__objective[varname])
-                if weight != 0:
-                    self.__wopt[varname] = weight
+            else: 
+                self.__objective.setdefault(varname,[]).append(pol*koef)
 
 
 
     # resolves structure of domain-statements and saves it
     def __lp_domain(self, atom):
-        if atom.elements[0].terms[0].arguments[0] == []:
-            varname = atom.elements[0].terms[0].arguments[0].name
+        varname = str(atom.guard[1])
+        if atom.elements != []:
+            for dom in atom.elements:
+                lb = self.__calc_bound(dom.terms[0].arguments[0])
+                ub = self.__calc_bound(dom.terms[0].arguments[1])
+                self.__bounds.setdefault(varname,[]).append((lb,ub))
         else:
-            varname = str(atom.elements[0].terms[0].arguments[0])
-        if "none" in str(atom.elements[0].terms[0].arguments[1]):
             lb = 'none'
-        else:
-            lb = self.__calc_bound(atom.elements[0].terms[0].arguments[1])
-        if "none" in str(atom.elements[0].terms[0].arguments[2]):
             ub = 'none'
-        else:
-            ub = self.__calc_bound(atom.elements[0].terms[0].arguments[2])
-        self.__bounds[varname] = (lb,ub)
+            self.__bounds.setdefault(varname,[]).append((lb,ub))
 
 
 
@@ -291,6 +387,8 @@ class Propagator:
             clist.append(state.clist[cnum])
         state.lp.add_constr(clist)
         state.lp.solve_lp()
+        state.save_assignment(self.__accuracy)
+        state.save_stats(self.__solver, self.__debug, self.__initcalls, self.__inittime, self.__propcalls, self.__proptime, self.__undocalls, self.__undotime, self.__checkcalls, self.__checktime)
 
 
 
@@ -380,8 +478,8 @@ class Propagator:
 
     def propagate(self, control, changes): 
         start = time.clock()
-        self.__update_state(control, changes)
         state = self.__state(control.thread_id)
+        self.__update_state(control, changes, state)
         if (state.recent_active != [] or state.oclit_recent_active == 1) and state.lits_current*100 / self.__lits_total_num >= self.__prop_heur:
             self.__solve(state) 
             if self.__trace:
@@ -389,6 +487,9 @@ class Propagator:
                 print 'propagate with ', state.lits_current*100 / state.total_lits, '%', changes 
                 for constr in state.clist:
                     print state.clist[constr]
+                print 'lp_trail: ', state.lp_trail  
+                print 'cond_trail: ', state.cond_trail
+                print 'eq_trail: ', state.eq_trail
                 print ''
             if state.lp.is_valid() and not self.__check_consistency(control, state):
                 end = time.clock()
@@ -415,7 +516,7 @@ class Propagator:
         for lit in state.lp_trail[lpid:]:
             var=abs(lit)
             for cnum in self.__var_ta[var]:
-                state.active_cnum[cnum][1] = 0
+                state.active_cnum[cnum][1] = 0 
         for lit in state.cond_trail[cid:]:
             var=abs(lit)
             for cnum in self.__clit_constr[var]:
@@ -443,33 +544,32 @@ class Propagator:
     def check(self, control):
         start = time.clock()
         state = self.__state(control.thread_id)
-        state.lp.print_sol(self.__show, self.__accuracy)
         end = time.clock()
         self.__checktime += end-start
         self.__checkcalls += 1
         self.__time = self.__time + end-start
-        times = state.lp.get_time()
-        print ''
-        if self.__debug > 0:
-            print 'Calls init: ', self.__initcalls, '      Time init:  ', self.__inittime
-            print 'Calls propagate: ', self.__propcalls, '      Time propagate:  ', self.__proptime
-            print 'Calls undo: ', self.__undocalls, '      Time undo:  ', self.__undotime
-            print 'Calls add: ', times[2], '      Time add:  ', times[3]
-            print 'Calls reset: ', times[4], '      Time reset:  ', times[5]
-            print 'Calls check: ', self.__checkcalls, '      Time check:  ', self.__checktime
-        if self.__solver == 'lps':
-            print 'LP solver calls: ', times[0], '   Time lp_solve :  ', times[1]
-        elif self.__solver == 'cplx':
-            print 'LP solver calls: ', times[0], '   Time cplex :  ', times[1]
-        print 'Time propagator:  ', self.__time
-        print ''
+        #times = state.lp.get_time()
+        #print ''
+        #if self.__debug > 0:
+        #    print 'Calls init: ', self.__initcalls, '      Time init:  ', self.__inittime
+        #    print 'Calls propagate: ', self.__propcalls, '      Time propagate:  ', self.__proptime
+        #    print 'Calls undo: ', self.__undocalls, '      Time undo:  ', self.__undotime
+        #    print 'Calls add: ', times[2], '      Time add:  ', times[3]
+        #    print 'Calls reset: ', times[4], '      Time reset:  ', times[5]
+        #    print 'Calls check: ', self.__checkcalls, '      Time check:  ', self.__checktime
+        #if self.__solver == 'lps':
+        #    print 'LP solver calls: ', times[0], '   Time lp_solve :  ', times[1]
+        #elif self.__solver == 'cplx':
+        #    print 'LP solver calls: ', times[0], '   Time cplex :  ', times[1]
+        #print 'Time propagator:  ', self.__time
+        #print ''
         return True
 
 
-
     # updates state wrt to changes
-    def __update_state(self, control, changes):
-        state = self.__state(control.thread_id)
+    def __update_state(self, control, changes, state):
+        if len(changes) > 0:
+            self.update_state_info(state)
         if len(state.stack) == 0 or state.stack[-1][0] < control.assignment.decision_level:
             state.stack.append((control.assignment.decision_level, len(state.lp_trail), len(state.cond_trail), len(state.oclit_trail), len(state.eq_trail)))
         state.recent_active = []
@@ -481,9 +581,9 @@ class Propagator:
                 for cnum in self.__lit_ta[lit]:
                     state.active_cnum[cnum][1] = 1
                     rel = self.__constr[cnum][1][1]
-                    if rel == '!=':
-                        self.__add_aux(control, state, cnum, lit)
-                    if state.active_cnum[cnum][0] == 0:
+                    if rel == '!=': 
+                        self.__add_aux(control, state, cnum, lit) 
+                    if state.active_cnum[cnum][0] == 0: 
                         state.recent_active.append(cnum)
             if not self.__nstrict and -lit in self.__lit_ta:
                 if lit not in state.lp_trail:
@@ -491,8 +591,8 @@ class Propagator:
                 for cnum in self.__lit_ta[-lit]:
                     state.active_cnum[cnum][1] = -1
                     rel = self.__constr[cnum][1][1]
-                    if rel == '=':
-                        self.__add_aux(control, state, cnum, lit)
+                    if rel == '=': 
+                        self.__add_aux(control, state, cnum, lit) 
                     if state.active_cnum[cnum][0] == 0:
                         state.recent_active.append(cnum)
             if var in self.__clit_constr:
@@ -514,6 +614,7 @@ class Propagator:
                     state.oclit_recent_active = 1
 
 
+
     # adds an literal l to choose on l or -l for disjunktion of '!='
     def __add_aux(self, control, state, cnum, lit):
         if state.active_cnum[cnum][2] == 0:
@@ -524,7 +625,7 @@ class Propagator:
             state.eqlit[cnum] = nlit
             state.eqlit_inv[nlit] = cnum
             state.active_cnum[cnum][0] += 1
-            control.add_clause([lit, nlit])
+            control.add_clause([lit,nlit], lock=True) 
             state.total_lits += 1
 
 
@@ -588,8 +689,9 @@ class Propagator:
     def __get_confl(self, state, confl_cnums):
         clause=[]
         for cnum in confl_cnums:
-            clause.append(-1*self.__constr[cnum][0]*state.active_cnum[cnum][1])
-            if state.active_cnum[cnum][2] == 1:
+            lit = self.__constr[cnum][0]*state.active_cnum[cnum][1]
+            clause.append(-1*lit)
+            if state.active_cnum[cnum][2] == 1: 
                 nlit = state.eqlit[cnum]
                 if nlit in state.eq_trail:
                     clause.append(-nlit) 
@@ -611,9 +713,9 @@ from lp_solve import *
 class lps:
 
 
-    def __init__(self, mapping, doms):
+    def __init__(self, mapping, doms, ilp):
         self.__var_mapping = {}         # {varname : position}
-        self.__doms = doms              # {varname : (lb,ub)}
+        self.__doms = doms              # {varname : [(lb,ub)]}
         self.__clist = []               # [({varname : weight}, rel, b)]
         self.__obj = {}                 # {varname : weight}
         self.__stime = 0.0 
@@ -622,17 +724,25 @@ class lps:
         self.__addcalls = 0
         self.__resettime = 0.0
         self.__resetcalls = 0
+        self.__mode = ''
         self.set_mapping(mapping)
         nvar = len(self.__var_mapping)     
         self.__solver_obj = lpsolve('make_lp', 0, nvar)
         lpsolve('set_verbose', self.__solver_obj, IMPORTANT)
         self.set_doms()
+        if ilp:
+            self.set_ilp()
         
     
     def set_mapping(self, mapping):
         self.__var_mapping = mapping
 
     
+    def set_ilp(self): 
+        for i in range(len(self.__var_mapping)):
+            lpsolve('set_int', self.__solver_obj, i+1, 1)
+
+
     def solve_lp(self):
         self.__scalls = self.__scalls +1 
         start = time.clock()
@@ -669,9 +779,12 @@ class lps:
     # expects wopt = {varname : weights}; mode = max/min
     def set_obj(self, wopt, mode):
         self.__obj = dict(wopt)
+        self.__mode = mode
         if mode == 'max':
             lpsolve('set_maxim', self.__solver_obj)
         else:
+            if mode != 'min':
+                self.__mode = 'default min'
             lpsolve('set_minim', self.__solver_obj)
         tmp = [0]*len(self.__var_mapping)
         for varname in wopt:
@@ -679,16 +792,17 @@ class lps:
         lpsolve('set_obj_fn', self.__solver_obj, tmp)
 
 
-    # expects doms = {varname : (lb,ub)}
+    # expects doms = {varname : [(lb,ub)]}
     def set_doms(self):
         for varname in self.__doms:
             if varname in self.__var_mapping:
-                lb = self.__doms[varname][0] 
-                ub = self.__doms[varname][1]
-                if lb != 'none':
-                    lpsolve('set_lowbo', self.__solver_obj, self.__var_mapping[varname], lb)
-                if ub != 'none':
-                    lpsolve('set_upbo', self.__solver_obj, self.__var_mapping[varname], ub)
+                for dom in self.__doms[varname]:
+                    lb = dom[0] 
+                    ub = dom[1]
+                    if lb != 'none':
+                        lpsolve('set_lowbo', self.__solver_obj, self.__var_mapping[varname], lb)
+                    if ub != 'none':
+                        lpsolve('set_upbo', self.__solver_obj, self.__var_mapping[varname], ub)
 
 
     def is_sat(self):
@@ -708,12 +822,30 @@ class lps:
         return False
 
     
+
     def get_time(self):
-        return (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
+        if self.is_sat(): 
+            time_return = (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
+        elif self.is_sat() == None:
+            time_return = 'Error'
+        else: 
+            time_return = 'Unsat'
+        return time_return
 
 
-    def print_sol(self, show, accuracy): 
-        if self.is_sat():
+
+    def get_stats(self):
+        stats = ''
+        stats = stats + 'constraints\n'
+        for constr in self.__clist:
+            stats = stats + str(constr) + '\n'
+        stats = stats + 'objective ' + self.__mode + '\n'
+        stats = stats + str(self.__obj) 
+        return stats
+
+
+    def get_solution(self, accuracy): 
+        if self.is_sat(): 
             sdict = {}
             slist = []
             res = lpsolve('get_variables', self.__solver_obj)[0]
@@ -729,36 +861,12 @@ class lps:
                 for var in self.__var_mapping:
                     sdict[var] = round(round(slist[self.__var_mapping[var]-1],1),0)
             slist = (obj, sdict)
-            print ''
-            print '-------------------------------'
-            print 'LP Solver output'
-            print ''
-            if show:
-                print 'constraints'
-                for constr in self.__clist:
-                    print constr
-                print 'objective'
-                print self.__obj
-            print 'lp solution'
-            print slist
         elif self.is_sat() == None:
-            print ''
-            print 'Unrecognized status'
-        elif self.__clist == []:
-            print ''
-            print '-------------------------------'
-            print 'EMPTY LP'
-        else:
-            print ''
-            print '-------------------------------'
-            print 'LP UNSATISFIABLE'
-            print ''
-            if show:
-                print 'constraints'
-                for constr in self.__clist:
-                    print constr
-                print 'objective'
-                print self.__obj
+            slist = 'Error'
+        else: 
+            slist = 'Unsat'
+        return slist
+
     
 
 ##### cplex wrapper
@@ -767,15 +875,16 @@ import cplex.callbacks
 class cplx:
 
 
-    def __init__(self, mapping, doms):
+    def __init__(self, mapping, doms, ilp):
         self.__var_mapping = {}         # {varname : position}
-        self.__doms = doms              # {varname : (lb,ub)}
+        self.__doms = doms              # {varname : [(lb,ub)]}
         self.__stime = 0.0 
         self.__scalls = 0
         self.__addtime = 0.0
         self.__addcalls = 0
         self.__resettime = 0.0
         self.__resetcalls = 0
+        self.__mode = ''
         self.set_mapping(mapping)
         self.__solver_obj = cplex.Cplex()
         self.__solver_obj.variables.add(names = self.__var_mapping.keys())
@@ -785,14 +894,21 @@ class cplx:
         self.__solver_obj.set_warning_stream(None)
         self.__solver_obj.set_results_stream(None)
         self.reset()
+        if ilp:
+            self.set_ilp()
         
     
+
     def set_mapping(self, mapping):
         self.__var_mapping = mapping
 
-    
+
+    def set_ilp(self): 
+        for i in range(len(self.__var_mapping)):    
+            self.__solver_obj.variables.set_types(i, self.__solver_obj.variables.type.integer)
+
+
     def solve_lp(self):
-        #print '<<<<<', self.__clist ###!!!
         self.__scalls = self.__scalls +1 
         start = time.clock()
         self.__solver_obj.solve() 
@@ -837,51 +953,61 @@ class cplx:
     # expects wopt = {varname : weights}; mode = max/min
     def set_obj(self, wopt, mode):
         self.__obj = dict(wopt)
+        self.__mode = mode
         if mode == 'max':
             self.__solver_obj.objective.set_sense(self.__solver_obj.objective.sense.maximize) 
         else:
+            if mode != 'min':
+                self.__mode = 'default min'
             self.__solver_obj.objective.set_sense(self.__solver_obj.objective.sense.minimize) 
         self.__solver_obj.objective.set_linear(wopt.items())
 
 
-    # expects doms = {varname : (lb,ub)}
+    # expects doms = {varname : [(lb,ub)]}
     def set_doms(self):
         if self.__doms != {}:
             lbs = []
             ubs = []
             for i, x in enumerate(self.__var_mapping.keys()):
                 if x in self.__doms:
-                    if self.__doms[x][0] != 'none':
-                        lbs.append((i,self.__doms[x][0]))
-                    if self.__doms[x][1] != 'none':
-                        ubs.append((i,self.__doms[x][1]))
+                    for dom in self.__doms[x]:
+                        if dom[0] != 'none':
+                            lbs.append((i,dom[0]))
+                        if dom[1] != 'none':
+                            ubs.append((i,dom[1]))
             if lbs != []:
                 self.__solver_obj.variables.set_lower_bounds(lbs)
             if ubs != []:
                 self.__solver_obj.variables.set_upper_bounds(ubs)
 
 
-    def is_sat(self):
+    def is_sat(self): # 102 - int with tolerance could be moved up if set tolerance was accessed!
         status = self.__solver_obj.solution.get_status()
-        if status in [1,2,4,23]: 
+        if status in [1,2,4,23,101,115,118]: 
             return True
-        elif status == 3:
+        elif status in [3,102,103]:
             return False
 
 
     def is_valid(self):
         status = self.__solver_obj.solution.get_status()
-        if status in [1,2,3,4,23]:
+        if status in [1,2,3,4,23,101,102,103,115,118]:
             return True
         return False
 
     
     def get_time(self):
-        return (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
+        if self.is_sat(): 
+            time_return = (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
+        elif self.is_sat() == None:
+            time_return = 'Error'
+        else: 
+            time_return = 'Unsat'
+        return time_return
 
 
-    def print_sol(self, show, accuracy): 
-        if self.is_sat():
+    def get_solution(self, accuracy): 
+        if self.is_sat(): 
             sdict = {}
             slist = []
             res = self.__solver_obj.solution.get_values(self.__var_mapping.keys())
@@ -897,46 +1023,43 @@ class cplx:
                 for i, var in enumerate(self.__var_mapping.keys()):
                     sdict[var] = round(round(slist[i],1),0)
             slist = (obj, sdict)
-            print ''
-            print '-------------------------------'
-            print 'LP Solver output'
-            print ''
-            if show:
-                print 'constraints'
-                for constr in self.__clist:
-                    print constr
-                print 'objective'
-                print self.__obj
-            print 'lp solution'
-            print slist
         elif self.is_sat() == None:
-            print ''
-            print 'Unrecognized status'
-        elif self.__clist == []:
-            print ''
-            print '-------------------------------'
-            print 'EMPTY LP'
+            slist = 'Error'
         else: 
-            print ''
-            print '-------------------------------'
-            print 'LP UNSATISFIABLE'
-            print ''
-            if show:
-                print 'constraints'
-                for constr in self.__clist:
-                    print constr
-                print 'objective'
-                print self.__obj
-    
+            slist = 'Unsat'
+        return slist
+
+
+    def get_stats(self):
+        stats = ''
+        stats = stats + 'constraints\n'
+        for constr in self.__clist:
+            stats = stats + str(constr) + '\n'
+        stats = stats + 'objective ' + self.__mode + '\n'
+        stats = stats + str(self.__obj) 
+        return stats
 
 
 
+
+import clingo
+
+def print_assignment(m):
+    global prop
+    prop.print_assignment(m.thread_id)
+
+
+def get(val, default):
+    return val if val != None else default
 
 
 def main(prg):
-    prop = Propagator(prg.get_const("show"), prg.get_const("accuracy"), prg.get_const("nstrict"), prg.get_const("epsilon"), prg.get_const("solver"), prg.get_const("trace"), prg.get_const("core_confl"), prg.get_const("prop_heur"), prg.get_const("debug"))
+    global prop
+    prop = Propagator(prg.get_const("show"), prg.get_const("accuracy"), prg.get_const("nstrict"), prg.get_const("epsilon"), prg.get_const("solver"), prg.get_const("trace"), prg.get_const("core_confl"), prg.get_const("prop_heur"), prg.get_const("debug"), prg.get_const("ilp"))
     prg.register_propagator(prop)
     prg.ground([("base", [])])
-    prg.solve()
+    prg.solve(on_model = print_assignment)
 
 #end.
+
+
