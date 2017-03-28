@@ -1,4 +1,4 @@
-# ASP modulo Linear Programming 
+# clingoLP (ASP modulo Linear Programming using clingo) 
 Propagator and script that solves ASP modulo linear programs.
 
 ## Prerequisites
