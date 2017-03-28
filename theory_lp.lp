@@ -1,4 +1,4 @@
-#theory lp {
+#theory lp { 
     lin_term {
     - : 2, unary;
     * : 1, binary, left;

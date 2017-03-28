@@ -1,5 +1,5 @@
 
-{a;b}.
+{a;b}. 
 
 &sum{W*X:coef(ID,I,W),var(ID,I,X)} <= K :- lp(ID), rel(ID,le), bound(ID,K).
 

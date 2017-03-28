@@ -1,4 +1,4 @@
-#include "theory_lp.lp".
+#include "theory_lp.lp". 
 
 % option data defaults
 #const show=0.

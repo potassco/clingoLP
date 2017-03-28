@@ -1,4 +1,4 @@
-# ASP modulo Linear Programming
+# ASP modulo Linear Programming 
 Propagator and script that solves ASP modulo linear programs.
 
 ## Prerequisites
