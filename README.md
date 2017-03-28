@@ -31,11 +31,13 @@ Example:
     * -c nstrict=1
         * Enables non-strict semantics (default nstrict=1)
     * -c solver='lps'
-        * Selects a lp solver (default solver=cplx) 
+        * Selects a LP solver (default solver=cplx) 
     * -c trace=1
         * Enables detailed output of theory propagation (default trace=0)
     * -c core_confl=n
         * Searches for core conflicts if at least n% of the theory atoms are decided (default core_confl=20)
     * -c prop_heur=n
-        * Starts a solve call of the lp solver if at least n% of the theory atoms are decided (default prop_heur=0)
+        * Starts a solve call of the LP solver if at least n% of the theory atoms are decided (default prop_heur=0)
+    * -c ilp=1
+        * Sets the LP solver to solve an Integer Linear Programming (ILP) problem (default ilp=0)
 
