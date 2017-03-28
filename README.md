@@ -1,4 +1,4 @@
-# clingo[LP] (ASP modulo Linear Programming using clingo5) 
+# clingo[LP]  
 The `clingo` derivate `clingo[LP]` extends of ASP with linear constraints as dealt with in Linear Programming (LP). 
 
 ## Prerequisites
