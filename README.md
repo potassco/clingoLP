@@ -17,7 +17,7 @@ Basic call:
 `clingo <script> <encoding> <instance> <options>`
 
 Example:
-`clingo lp-prop.lp example_encoding.lp example_instance.lp -c show=1`
+`clingo clingoLP.py example_encoding.lp example_instance.lp -c show=1`
 
 * Options 
     * All clingo options
