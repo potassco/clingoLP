@@ -870,6 +870,8 @@ class lps:
 ##### cplex wrapper
 import cplex 
 import cplex.callbacks
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 class cplx:
 
 
