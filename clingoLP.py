@@ -184,7 +184,7 @@ class Propagator:
 
 
     def init(self, init):
-        start = time.clock()
+        start = time.process_time()
         for atom in init.theory_atoms:
             term = atom.term
             if term.name == 'lp' or term.name == 'sum':
@@ -203,7 +203,7 @@ class Propagator:
         for varname in self.__vars:
             col_pos = col_pos +1
             self.__varpos[varname] = col_pos
-        end = time.clock()
+        end = time.process_time()
         self.__inittime += end-start
         self.__initcalls += 1
         self.__time = self.__time + end-start
@@ -482,7 +482,7 @@ class Propagator:
 
 
     def propagate(self, control, changes): 
-        start = time.clock()
+        start = time.process_time()
         state = self.__state(control.thread_id)
         self.__update_state(control, changes, state)
         if (state.recent_active != [] or state.oclit_recent_active == 1) and state.lits_current*100 / self.__lits_total_num >= self.__prop_heur:
@@ -497,12 +497,12 @@ class Propagator:
                 print('eq_trail: ', state.eq_trail)
                 print('')
             if state.lp.is_valid() and not self.__check_consistency(control, state):
-                end = time.clock()
+                end = time.process_time()
                 self.__proptime += end-start
                 self.__propcalls += 1
                 self.__time = self.__time + end-start
                 return False
-        end = time.clock()
+        end = time.process_time()
         self.__proptime += end-start
         self.__propcalls += 1
         self.__time = self.__time + end-start
@@ -511,7 +511,7 @@ class Propagator:
 
 
     def undo(self, thread_id, assign, changes):
-        start = time.clock()
+        start = time.process_time()
         state = self.__state(thread_id)
         lpid = state.stack[-1][1]
         cid = state.stack[-1][2]
@@ -539,7 +539,7 @@ class Propagator:
         del state.eq_trail[nid:]
         state.lp.reset()
         state.stack.pop()
-        end = time.clock()
+        end = time.process_time()
         self.__undotime += end-start
         self.__undocalls += 1
         self.__time = self.__time + end-start
@@ -547,9 +547,9 @@ class Propagator:
 
 
     def check(self, control):
-        start = time.clock()
+        start = time.process_time()
         state = self.__state(control.thread_id)
-        end = time.clock()
+        end = time.process_time()
         self.__checktime += end-start
         self.__checkcalls += 1
         self.__time = self.__time + end-start
