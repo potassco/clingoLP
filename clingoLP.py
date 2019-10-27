@@ -3,7 +3,7 @@
 #const accuracy=1.
 #const epsilon=(1,3). % similar to cplex default
 #const nstrict=1.
-#const solver=cplx.
+#const solver=lps.
 #const trace=0.
 #const core_confl=20.
 #const prop_heur=0.
@@ -13,9 +13,16 @@
 
 #script (python)
 
+
 import sys
 import time
-    
+
+try:
+    from cplx import cplx
+except ModuleNotFoundError as e:
+    print('cplex not found, using lp_solve')
+from lps import lps
+
 
 class Propagator:
 
@@ -65,21 +72,21 @@ class Propagator:
 
 
         def print_assignment(self, show):
-            print ''
-            print 'LP Solver output'
+            print('')
+            print('LP Solver output')
             if show:
-                print self.stats 
-                print ''
-                print 'solution'
-                print self.current_assignment
-                print ''
-                print self.times_print
-                print ''
+                print(self.stats) 
+                print('')
+                print('solution')
+                print(self.current_assignment)
+                print('')
+                print(self.times_print)
+                print('')
             else:
-                print self.current_assignment
-                print ''
-                print self.times_print
-                print ''
+                print(self.current_assignment)
+                print('')
+                print(self.times_print)
+                print('')
 
 
     def __state(self, sid): 
@@ -103,7 +110,7 @@ class Propagator:
             lp_solver_class = globals()[self.__solver] 
             state.lp = lp_solver_class(self.__varpos, self.__bounds, self.__ilp)
         except:
-            print 'No wrapper class of ', self.__solver, ' found!'
+            print('No wrapper class of ', self.__solver, ' found!')
             exit()
 
 
@@ -372,7 +379,7 @@ class Propagator:
             cnums = state.recent_active
         else:
             state.clist = dict(self.__get_constrs(state, [cnum for cnum in state.active_cnum if state.active_cnum[cnum][0] == 0 and state.active_cnum[cnum][1] != 0]))
-            cnums = state.clist.keys()
+            cnums = list(state.clist.keys())
         if state.active_oclit == 0:
             if self.__wopt == {}:
                 obj = self.__set_obj(state)
@@ -481,14 +488,14 @@ class Propagator:
         if (state.recent_active != [] or state.oclit_recent_active == 1) and state.lits_current*100 / self.__lits_total_num >= self.__prop_heur:
             self.__solve(state) 
             if self.__trace:
-                print ''
-                print 'propagate with ', state.lits_current*100 / state.total_lits, '%', changes 
+                print('')
+                print('propagate with ', state.lits_current*100 / state.total_lits, '%', changes) 
                 for constr in state.clist:
-                    print state.clist[constr]
-                print 'lp_trail: ', state.lp_trail  
-                print 'cond_trail: ', state.cond_trail
-                print 'eq_trail: ', state.eq_trail
-                print ''
+                    print(state.clist[constr])
+                print('lp_trail: ', state.lp_trail)  
+                print('cond_trail: ', state.cond_trail)
+                print('eq_trail: ', state.eq_trail)
+                print('')
             if state.lp.is_valid() and not self.__check_consistency(control, state):
                 end = time.clock()
                 self.__proptime += end-start
@@ -634,26 +641,26 @@ class Propagator:
             core_confl = self.__core_confl(state, [], active_cnums)
             clause = self.__get_confl(state, core_confl)
             if self.__trace:
-                print ''
-                print 'core conflict constraints: '
+                print('')
+                print('core conflict constraints: ')
                 for confl_cnum in core_confl:
-                    print state.clist[confl_cnum]
-                print ''
+                    print(state.clist[confl_cnum])
+                print('')
             if not control.add_clause(clause) or not control.propagate():
                 return False
-            print 'If this was printed, then I did something really wrong!' 
+            print('If this was printed, then I did something really wrong!') 
         if not state.lp.is_sat():
             active_cnums = [cnum for cnum in state.active_cnum if state.active_cnum[cnum][0] == 0 and state.active_cnum[cnum][1] != 0]
             clause = self.__get_confl(state, active_cnums)
             if self.__trace:
-                print ''
-                print 'conflict constraints: '
+                print('')
+                print('conflict constraints: ')
                 for confl_cnum in active_cnums:
-                    print state.clist[confl_cnum]
-                print ''
+                    print(state.clist[confl_cnum])
+                print('')
             if not control.add_clause(clause) or not control.propagate():
                 return False
-            print 'If this was printed, then I did something really wrong!'
+            print('If this was printed, then I did something really wrong!')
         return True
 
 
@@ -704,344 +711,6 @@ class Propagator:
         clause = [x for x in clause if abs(x)>1]
         return clause
 
-
-
-##### lpsolve wrapper
-from lp_solve import *
-class lps:
-
-
-    def __init__(self, mapping, doms, ilp):
-        self.__var_mapping = {}         # {varname : position}
-        self.__doms = doms              # {varname : [(lb,ub)]}
-        self.__clist = []               # [({varname : weight}, rel, b)]
-        self.__obj = {}                 # {varname : weight}
-        self.__stime = 0.0 
-        self.__scalls = 0
-        self.__addtime = 0.0
-        self.__addcalls = 0
-        self.__resettime = 0.0
-        self.__resetcalls = 0
-        self.__mode = ''
-        self.set_mapping(mapping)
-        nvar = len(self.__var_mapping)     
-        self.__solver_obj = lpsolve('make_lp', 0, nvar)
-        lpsolve('set_verbose', self.__solver_obj, IMPORTANT)
-        self.set_doms()
-        if ilp:
-            self.set_ilp()
-        
-    
-    def set_mapping(self, mapping):
-        self.__var_mapping = mapping
-
-    
-    def set_ilp(self): 
-        for i in range(len(self.__var_mapping)):
-            lpsolve('set_int', self.__solver_obj, i+1, 1)
-
-
-    def solve_lp(self):
-        self.__scalls = self.__scalls +1 
-        start = time.clock()
-        lpsolve('solve', self.__solver_obj)
-        self.__stime = self.__stime + time.clock() - start
-        
-
-    def reset(self):
-        self.__resetcalls = self.__resetcalls +1 
-        start = time.clock()
-        n = len(self.__clist)
-        if n>0:
-            while n != 0:
-                lpsolve('del_constraint', self.__solver_obj, 1)
-                n -= 1
-        self.__clist = []               # [({varname : weight}, rel, b)]
-        self.__obj = {}                 # {varname : weight}
-        self.__resettime = self.__resettime + time.clock() - start
-
-    # expects clist = [({varname : weight}, rel, b)]
-    def add_constr(self, clist): 
-        self.__addcalls = self.__addcalls +1 
-        start = time.clock()
-        self.__clist.extend(clist)
-        nvar = len(self.__var_mapping)
-        for constr in clist:
-            tmp = [0]*nvar
-            for varname in constr[0]:
-                tmp[self.__var_mapping[varname]-1] = constr[0][varname]
-            lpsolve('add_constraint', self.__solver_obj, tmp, constr[1], constr[2])
-        self.__addtime = self.__addtime + time.clock() - start
-
-
-    # expects wopt = {varname : weights}; mode = max/min
-    def set_obj(self, wopt, mode):
-        self.__obj = dict(wopt)
-        self.__mode = mode
-        if mode == 'max':
-            lpsolve('set_maxim', self.__solver_obj)
-        else:
-            if mode != 'min':
-                self.__mode = 'default min'
-            lpsolve('set_minim', self.__solver_obj)
-        tmp = [0]*len(self.__var_mapping)
-        for varname in wopt:
-            tmp[self.__var_mapping[varname]-1] = wopt[varname]
-        lpsolve('set_obj_fn', self.__solver_obj, tmp)
-
-
-    # expects doms = {varname : [(lb,ub)]}
-    def set_doms(self):
-        for varname in self.__doms:
-            if varname in self.__var_mapping:
-                for dom in self.__doms[varname]:
-                    lb = dom[0] 
-                    ub = dom[1]
-                    if lb != 'none':
-                        lpsolve('set_lowbo', self.__solver_obj, self.__var_mapping[varname], lb)
-                    if ub != 'none':
-                        lpsolve('set_upbo', self.__solver_obj, self.__var_mapping[varname], ub)
-
-
-    def is_sat(self):
-        status = lpsolve('get_status', self.__solver_obj)
-        if status in [0,1,3]: 
-            return True
-        elif status == 2:
-            return False
-
-
-    def is_valid(self):
-        if self.__clist == []:
-            return False
-        status = lpsolve('get_status', self.__solver_obj)
-        if status in [0,1,2,3,4]:
-            return True
-        return False
-
-    
-
-    def get_time(self):
-        if self.is_sat(): 
-            time_return = (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
-        elif self.is_sat() == None:
-            time_return = 'Error'
-        else: 
-            time_return = 'Unsat'
-        return time_return
-
-
-
-    def get_stats(self):
-        stats = ''
-        stats = stats + 'constraints\n'
-        for constr in self.__clist:
-            stats = stats + str(constr) + '\n'
-        stats = stats + 'objective ' + self.__mode + '\n'
-        stats = stats + str(self.__obj) 
-        return stats
-
-
-    def get_solution(self, accuracy): 
-        if self.is_sat(): 
-            sdict = {}
-            slist = []
-            res = lpsolve('get_variables', self.__solver_obj)[0]
-            if isinstance(res, float):
-                slist.append(res)
-            else:
-                slist.extend(res)
-            obj = lpsolve('get_objective', self.__solver_obj)
-            if accuracy > 0 and accuracy < 15:
-                for var in self.__var_mapping:
-                    sdict[var] = round(slist[self.__var_mapping[var]-1], accuracy)
-            else:
-                for var in self.__var_mapping:
-                    sdict[var] = round(round(slist[self.__var_mapping[var]-1],1),0)
-            slist = (obj, sdict)
-        elif self.is_sat() == None:
-            slist = 'Error'
-        else: 
-            slist = 'Unsat'
-        return slist
-
-    
-
-##### cplex wrapper
-import cplex 
-import cplex.callbacks
-import signal
-signal.signal(signal.SIGINT, signal.SIG_DFL)
-class cplx:
-
-
-    def __init__(self, mapping, doms, ilp):
-        self.__var_mapping = {}         # {varname : position}
-        self.__doms = doms              # {varname : [(lb,ub)]}
-        self.__stime = 0.0 
-        self.__scalls = 0
-        self.__addtime = 0.0
-        self.__addcalls = 0
-        self.__resettime = 0.0
-        self.__resetcalls = 0
-        self.__mode = ''
-        self.set_mapping(mapping)
-        self.__solver_obj = cplex.Cplex()
-        self.__solver_obj.variables.add(names = self.__var_mapping.keys())
-        self.set_doms()
-        self.__solver_obj.set_log_stream(None)
-        self.__solver_obj.set_error_stream(None)
-        self.__solver_obj.set_warning_stream(None)
-        self.__solver_obj.set_results_stream(None)
-        self.reset()
-        if ilp:
-            self.set_ilp()
-        
-    
-
-    def set_mapping(self, mapping):
-        self.__var_mapping = mapping
-
-
-    def set_ilp(self): 
-        for i in range(len(self.__var_mapping)):    
-            self.__solver_obj.variables.set_types(i, self.__solver_obj.variables.type.integer)
-
-
-    def solve_lp(self):
-        self.__scalls = self.__scalls +1 
-        start = time.clock()
-        self.__solver_obj.solve() 
-        self.__stime = self.__stime + time.clock() - start
-        
-
-    def reset(self):
-        self.__resetcalls = self.__resetcalls +1 
-        start = time.clock()
-        self.__clist = []               # [({varname : weight}, rel, b)]
-        self.__obj = {}                 # {varname : weight}
-        self.__solver_obj.linear_constraints.delete()
-        self.__resettime = self.__resettime + time.clock() - start
-
-
-    # expects clist = [({varname : weight}, rel, b)]
-    def add_constr(self, clist): 
-        self.__addcalls = self.__addcalls +1 
-        start = time.clock()
-        self.__clist.extend(clist)
-        lin_expr = []
-        rels = []
-        rhs = []
-        for constr in clist:
-            items = constr[0].items()
-            varnames = [x[0] for x in items] 
-            values = [x[1] for x in items]
-            lin_expr.append(cplex.SparsePair(ind = varnames, val = values))
-            rel = constr[1]
-            b = constr[2]
-            if rel == '<=':
-                rels.append("L")
-            elif rel == '>=':
-                rels.append("G")
-            elif rel == '=':
-                rels.append("E")
-            rhs.append(b)
-        self.__solver_obj.linear_constraints.add(lin_expr = lin_expr, senses = rels, rhs = rhs)
-        self.__addtime = self.__addtime + time.clock() - start
-        
-
-    # expects wopt = {varname : weights}; mode = max/min
-    def set_obj(self, wopt, mode):
-        self.__obj = dict(wopt)
-        self.__mode = mode
-        if mode == 'max':
-            self.__solver_obj.objective.set_sense(self.__solver_obj.objective.sense.maximize) 
-        else:
-            if mode != 'min':
-                self.__mode = 'default min'
-            self.__solver_obj.objective.set_sense(self.__solver_obj.objective.sense.minimize) 
-        self.__solver_obj.objective.set_linear(wopt.items())
-
-
-    # expects doms = {varname : [(lb,ub)]}
-    def set_doms(self):
-        if self.__doms != {}:
-            lbs = []
-            ubs = []
-            for i, x in enumerate(self.__var_mapping.keys()):
-                if x in self.__doms:
-                    for dom in self.__doms[x]:
-                        if dom[0] != 'none':
-                            lbs.append((i,dom[0]))
-                        if dom[1] != 'none':
-                            ubs.append((i,dom[1]))
-            if lbs != []:
-                self.__solver_obj.variables.set_lower_bounds(lbs)
-            if ubs != []:
-                self.__solver_obj.variables.set_upper_bounds(ubs)
-
-
-    def is_sat(self): # 102 - int with tolerance could be moved up if set tolerance was accessed!
-        status = self.__solver_obj.solution.get_status()
-        if status in [1,2,4,23,101,115,118]: 
-            return True
-        elif status in [3,102,103]:
-            return False
-
-
-    def is_valid(self):
-        status = self.__solver_obj.solution.get_status()
-        if status in [1,2,3,4,23,101,102,103,115,118]:
-            return True
-        return False
-
-    
-    def get_time(self):
-        if self.is_sat(): 
-            time_return = (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
-        elif self.is_sat() == None:
-            time_return = 'Error'
-        else: 
-            time_return = 'Unsat'
-        return time_return
-
-
-    def get_solution(self, accuracy): 
-        if self.is_sat(): 
-            sdict = {}
-            slist = []
-            res = self.__solver_obj.solution.get_values(self.__var_mapping.keys())
-            if isinstance(res, float):
-                slist.append(res)
-            else:
-                slist.extend(res)
-            obj = self.__solver_obj.solution.get_objective_value()
-            if accuracy > 0 and accuracy < 15:
-                for i, var in enumerate(self.__var_mapping.keys()):
-                    sdict[var] = round(slist[i], accuracy)
-            else:
-                for i, var in enumerate(self.__var_mapping.keys()):
-                    sdict[var] = round(round(slist[i],1),0)
-            slist = (obj, sdict)
-        elif self.is_sat() == None:
-            slist = 'Error'
-        else: 
-            slist = 'Unsat'
-        return slist
-
-
-    def get_stats(self):
-        stats = ''
-        stats = stats + 'constraints\n'
-        for constr in self.__clist:
-            stats = stats + str(constr) + '\n'
-        stats = stats + 'objective ' + self.__mode + '\n'
-        stats = stats + str(self.__obj) 
-        return stats
-
-
-
-
 import clingo
 
 def print_assignment(m):
@@ -1064,18 +733,18 @@ def main(prg):
 
 #theory lp { 
     lin_term {
-    - : 2, unary;
-    * : 1, binary, left;
-    + : 0, binary, left;
-    - : 0, binary, left
+        - : 2, unary;
+        * : 1, binary, left;
+        + : 0, binary, left;
+        - : 0, binary, left
     };
     bounds{
-    - : 4, unary;
-    * : 3, binary, left;
-    / : 2, binary, left;
-    + : 1, binary, left;
-    - : 1, binary, left;   
-    .. : 0, binary, left 
+        - : 4, unary;
+        * : 3, binary, left;
+        / : 2, binary, left;
+        + : 1, binary, left;
+        - : 1, binary, left;   
+        .. : 0, binary, left 
     };
 
     &lp/0   : lin_term, {<=,>=,>,<,=,!=}, bounds, any;
@@ -1085,7 +754,3 @@ def main(prg):
     &maximize/0 : lin_term, head;
     &dom/0 : bounds, {=}, lin_term, head
 }.
-
-
-
-
