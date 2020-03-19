@@ -1,17 +1,18 @@
 import sys
 import time
-    
-##### lpsolve wrapper
-from lp_solve import *
-class lps:
 
+# lpsolve wrapper
+from lp_solve import *
+
+
+class lps:
 
     def __init__(self, mapping, doms, ilp):
         self.__var_mapping = {}         # {varname : position}
         self.__doms = doms              # {varname : [(lb,ub)]}
         self.__clist = []               # [({varname : weight}, rel, b)]
         self.__obj = {}                 # {varname : weight}
-        self.__stime = 0.0 
+        self.__stime = 0.0
         self.__scalls = 0
         self.__addtime = 0.0
         self.__addcalls = 0
@@ -19,35 +20,31 @@ class lps:
         self.__resetcalls = 0
         self.__mode = ''
         self.set_mapping(mapping)
-        nvar = len(self.__var_mapping)     
+        nvar = len(self.__var_mapping)
         self.__solver_obj = lpsolve('make_lp', 0, nvar)
         lpsolve('set_verbose', self.__solver_obj, IMPORTANT)
         self.set_doms()
         if ilp:
             self.set_ilp()
-        
-    
+
     def set_mapping(self, mapping):
         self.__var_mapping = mapping
 
-    
-    def set_ilp(self): 
+    def set_ilp(self):
         for i in range(len(self.__var_mapping)):
             lpsolve('set_int', self.__solver_obj, i+1, 1)
 
-
     def solve_lp(self):
-        self.__scalls = self.__scalls +1 
+        self.__scalls = self.__scalls + 1
         start = time.clock()
         lpsolve('solve', self.__solver_obj)
         self.__stime = self.__stime + time.clock() - start
-        
 
     def reset(self):
-        self.__resetcalls = self.__resetcalls +1 
+        self.__resetcalls = self.__resetcalls + 1
         start = time.clock()
         n = len(self.__clist)
-        if n>0:
+        if n > 0:
             while n != 0:
                 lpsolve('del_constraint', self.__solver_obj, 1)
                 n -= 1
@@ -55,9 +52,10 @@ class lps:
         self.__obj = {}                 # {varname : weight}
         self.__resettime = self.__resettime + time.clock() - start
 
-    # expects clist = [({varname : weight}, rel, b)]
-    def add_constr(self, clist): 
-        self.__addcalls = self.__addcalls +1 
+    def add_constr(self, clist):
+        ''' expects clist = [({varname : weight}, rel, b)]
+        '''
+        self.__addcalls = self.__addcalls + 1
         start = time.clock()
         self.__clist.extend(clist)
         nvar = len(self.__var_mapping)
@@ -65,12 +63,13 @@ class lps:
             tmp = [0]*nvar
             for varname in constr[0]:
                 tmp[self.__var_mapping[varname]-1] = constr[0][varname]
-            lpsolve('add_constraint', self.__solver_obj, tmp, constr[1], constr[2])
+            lpsolve('add_constraint', self.__solver_obj,
+                    tmp, constr[1], constr[2])
         self.__addtime = self.__addtime + time.clock() - start
 
-
-    # expects wopt = {varname : weights}; mode = max/min
     def set_obj(self, wopt, mode):
+        ''' expects wopt = {varname : weights}; mode = max/min
+        '''
         self.__obj = dict(wopt)
         self.__mode = mode
         if mode == 'max':
@@ -84,48 +83,45 @@ class lps:
             tmp[self.__var_mapping[varname]-1] = wopt[varname]
         lpsolve('set_obj_fn', self.__solver_obj, tmp)
 
-
-    # expects doms = {varname : [(lb,ub)]}
     def set_doms(self):
+        ''' expects doms = {varname : [(lb,ub)]}
+        '''
         for varname in self.__doms:
             if varname in self.__var_mapping:
                 for dom in self.__doms[varname]:
-                    lb = dom[0] 
+                    lb = dom[0]
                     ub = dom[1]
                     if lb != 'none':
-                        lpsolve('set_lowbo', self.__solver_obj, self.__var_mapping[varname], lb)
+                        lpsolve('set_lowbo', self.__solver_obj,
+                                self.__var_mapping[varname], lb)
                     if ub != 'none':
-                        lpsolve('set_upbo', self.__solver_obj, self.__var_mapping[varname], ub)
-
+                        lpsolve('set_upbo', self.__solver_obj,
+                                self.__var_mapping[varname], ub)
 
     def is_sat(self):
         status = lpsolve('get_status', self.__solver_obj)
-        if status in [0,1,3]: 
+        if status in [0, 1, 3]:
             return True
         elif status == 2:
             return False
-
 
     def is_valid(self):
         if self.__clist == []:
             return False
         status = lpsolve('get_status', self.__solver_obj)
-        if status in [0,1,2,3,4]:
+        if status in [0, 1, 2, 3, 4]:
             return True
         return False
 
-    
-
     def get_time(self):
-        if self.is_sat(): 
-            time_return = (self.__scalls, self.__stime, self.__addcalls, self.__addtime, self.__resetcalls, self.__resettime)
+        if self.is_sat():
+            time_return = (self.__scalls, self.__stime, self.__addcalls,
+                           self.__addtime, self.__resetcalls, self.__resettime)
         elif self.is_sat() == None:
             time_return = 'Error'
-        else: 
+        else:
             time_return = 'Unsat'
         return time_return
-
-
 
     def get_stats(self):
         stats = ''
@@ -133,12 +129,11 @@ class lps:
         for constr in self.__clist:
             stats = stats + str(constr) + '\n'
         stats = stats + 'objective ' + self.__mode + '\n'
-        stats = stats + str(self.__obj) 
+        stats = stats + str(self.__obj)
         return stats
 
-
-    def get_solution(self, accuracy): 
-        if self.is_sat(): 
+    def get_solution(self, accuracy):
+        if self.is_sat():
             sdict = {}
             slist = []
             res = lpsolve('get_variables', self.__solver_obj)[0]
@@ -149,14 +144,15 @@ class lps:
             obj = lpsolve('get_objective', self.__solver_obj)
             if accuracy > 0 and accuracy < 15:
                 for var in self.__var_mapping:
-                    sdict[var] = round(slist[self.__var_mapping[var]-1], accuracy)
+                    sdict[var] = round(
+                        slist[self.__var_mapping[var]-1], accuracy)
             else:
                 for var in self.__var_mapping:
-                    sdict[var] = round(round(slist[self.__var_mapping[var]-1],1),0)
+                    sdict[var] = round(
+                        round(slist[self.__var_mapping[var]-1], 1), 0)
             slist = (obj, sdict)
         elif self.is_sat() == None:
             slist = 'Error'
-        else: 
+        else:
             slist = 'Unsat'
         return slist
-
