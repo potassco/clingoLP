@@ -9,8 +9,8 @@ dependencies:
   - astroid=2.3.3=py37_0
   - autopep8=1.4.4=py_0
   - blas=1.0=mkl
-  - ca-certificates=2020.1.1=0
-  - certifi=2019.11.28=py37_0
+  - ca-certificates=2019.11.28=hecc5488_0
+  - certifi=2019.11.28=py37hc8dfbb8_1
   - clingo=5.4.0=py37lua53hf484d3e_0
   - intel-openmp=2020.0=166
   - isort=4.3.21=py37_0
@@ -23,6 +23,7 @@ dependencies:
   - libgomp=9.2.0=h24d8f2e_2
   - libstdcxx-ng=9.1.0=hdf63c60_0
   - lp_solve=5.5.2.5=h14c3975_1001
+  - lpsolve55=5.5=py37hc1659b7_1001
   - lua=5.3.4=h7b6447c_0
   - mccabe=0.6.1=py37_1
   - mkl=2020.0=166
@@ -32,7 +33,7 @@ dependencies:
   - ncurses=6.2=he6710b0_0
   - numpy=1.18.1=py37h4f9e942_0
   - numpy-base=1.18.1=py37hde5b4d6_1
-  - openssl=1.1.1e=h7b6447c_0
+  - openssl=1.1.1e=h516909a_0
   - pip=20.0.2=py37_1
   - pycodestyle=2.5.0=py37_0
   - pylint=2.4.4=py37_0
@@ -47,7 +48,5 @@ dependencies:
   - wrapt=1.12.1=py37h7b6447c_1
   - xz=5.2.4=h14c3975_4
   - zlib=1.2.11=h7b6447c_3
-  - pip:
-    - lpsolve55==5.5.0.9
 prefix: /home/sthiele/miniconda3/envs/clingoLP
 

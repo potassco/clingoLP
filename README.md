@@ -4,31 +4,30 @@ The `clingo` derivative `clingo[LP]` extends of ASP with linear constraints as d
 
 ## Prerequisites
 
-Use the provided conda environment: 
+Use the provided conda environment:
+
 + `conda env create -f environment.yml`
 + `conda activate clingoLP`
 
 The propagators and scripts require [lpsolve](https://sourceforge.net/projects/lpsolve/) or [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html).
 Additionally, the corresponding Python bindings have to be installed, as described on their respective websites.
 
-### `lpsolve`
-
-A python package for lpsolve is contained in this repository:
-+ `cd lp_solve_5.5`
-+ `python setup install`
-
 ### `cplex`
 
-IBM provides a promotional version sufficient to solve toy examples:
+IBM provides a promotional version sufficient to solve small problems limited to 1000 variables and 1000 constraints.
+
 + `conda install -c ibmdecisionoptimization cplex`
+
+To solve larger problems, you need to use the full version of CPLEX Studio.
 
 ## Syntax
 
 lp constraints can be expressed as follows:
-  + w_1*x_1+...+w_nx_n >= k --> &sum{w_1*x_1;...;w_n*x_n} >= k
-  + domain(x)={l,...,u} --> &dom{l..u}=x
-  + objective maximize function f_max(w_1*x_1+...+w_nx_n) --> &maximize{w_1*x_1;...;w_n*x_n} (minimize analogous)
-  + use "w_i" instead of w_i if w_i is a real number to avoid syntax clashes
+
++ w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> >= k --> `&sum{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>n</sub>`} >= `k
++ domain(x)={l,...,u} --> `&dom{`l`..`u`}=`x
++ objective maximize function f_max(w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub>) --> `&maximize{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>1</sub>`}` (minimize analogous)
++ to avoid syntax clashes you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
 
 ## General usage of clingo[LP]
 
