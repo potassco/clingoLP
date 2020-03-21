@@ -1,11 +1,14 @@
+#!python
+# -*- coding: utf-8 -*-
+
 import sys
 import clingo
-import lp_theory
+from clingoLP import lp_theory
 
 
 class Application:
-    def __init__(self, name):
-        self.program_name = name
+    def __init__(self):
+        self.program_name = 'clingoLP'
         self.version = "1.0"
         self.prop = None
         self.lp_assignment = None
@@ -54,4 +57,7 @@ class Application:
                     sys.stdout.write("\n")
 
 
-sys.exit(int(clingo.clingo_main(Application("clingoLP"), sys.argv[1:])))
+def main_clingo(args=None):
+    sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:])))
+
+sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:])))

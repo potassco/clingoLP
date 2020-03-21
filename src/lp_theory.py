@@ -234,7 +234,7 @@ class Propagator:
             else:
                 print('cplex not found')
                 exit()
-        elif str(solver.name) == 'lps':
+        else:
             if lps_found:
                 self.__solver = 'lps'
             else:
