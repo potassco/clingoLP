@@ -18,7 +18,7 @@
 from setuptools import setup
 
 setup(
-    name='clingoLP',
+    name='clingo-lp',
     version='0.1.0',
     url='http://github.com/sthiele/clingoLP/',
     license='GPLv3+',
