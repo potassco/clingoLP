@@ -28,6 +28,6 @@ setup(
     author='Sven Thiele',
     author_email='sthiele78@gmail.com',
     packages=['clingolp'],
-    package_dir={'clingolp': 'src'},,
+    package_dir={'clingolp': 'src'},
     entry_points={'console_scripts': ['clingoLP = clingolp.app:main_clingo']}
 )
