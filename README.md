@@ -1,6 +1,6 @@
 # clingo[LP]  
 
-The `clingo` derivative `clingo[LP]` extends of ASP with linear constraints as dealt with in Linear Programming (LP).
+`clingo[LP]` extends of ASP solver `clingo` with linear constraints as dealt with in Linear Programming (LP).
 
 ## Prerequisites
 
@@ -9,12 +9,11 @@ Use the provided conda environment:
 + `conda env create -f environment.yml`
 + `conda activate clingoLP`
 
-The propagators and scripts require [lpsolve](https://sourceforge.net/projects/lpsolve/) or [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html).
-Additionally, the corresponding Python bindings have to be installed, as described on their respective websites.
+The propagator requires an LP solver. The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
 
 ### `cplex`
 
-IBM provides a promotional version sufficient to solve small problems limited to 1000 variables and 1000 constraints.
+IBM provides a promotional version of `cplex` that is sufficient to solve small problems limited to 1000 variables and 1000 constraints.
 
 + `conda install -c ibmdecisionoptimization cplex`
 
