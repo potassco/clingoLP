@@ -29,6 +29,5 @@ setup(
     author_email='sthiele78@gmail.com',
     packages=['clingolp'],
     package_dir={'clingolp': 'src'},
-    # scripts          = ['clingoLP.py'],
-    entry_points={'console_scripts': ['clingoLP = clingolp.app:main_clingo']}
+    scripts          = ['clingoLP.py']
 )
