@@ -32,10 +32,10 @@ lp constraints can be expressed as follows:
 ## General usage of clingo[LP]
 
 Basic call:
-`python clingoLP.py <encoding> <instance> <options>`
+`clingoLP <encoding> <instance> <options>`
 
 Example:
-`python clingoLP.py example_encoding.lp example_instance.lp -c show=1`
+`clingoLP example_encoding.lp example_instance.lp -c show=1`
 
 + Options
   + -c show=1

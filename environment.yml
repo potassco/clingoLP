@@ -1,5 +1,6 @@
 name: clingoLP
 channels:
+  - sthiele
   - potassco
   - conda-forge
   - defaults
@@ -8,6 +9,7 @@ dependencies:
   - ca-certificates=2019.11.28=hecc5488_0
   - certifi=2019.11.28=py37hc8dfbb8_1
   - clingo=5.4.0=py37lua53hf484d3e_0
+  - clingolp=0.1.0=py_0
   - ld_impl_linux-64=2.33.1=h53a641e_7
   - libblas=3.8.0=14_openblas
   - libcblas=3.8.0=14_openblas
