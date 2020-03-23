@@ -30,5 +30,5 @@ setup(
     packages=['clingolp'],
     package_dir={'clingolp': 'src'},
     # scripts          = ['clingoLP.py'],
-    entry_points={'console_scripts': ['clingoLP = clingoLP.app:main_clingo']}
+    entry_points={'console_scripts': ['clingoLP = clingolp.app:main_clingo']}
 )

@@ -3,7 +3,7 @@
 
 import sys
 import clingo
-from clingoLP import lp_theory
+from clingolp import lp_theory
 
 
 class Application:
