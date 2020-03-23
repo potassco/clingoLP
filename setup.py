@@ -1,4 +1,4 @@
- # Copyright (c) 2020, Sven Thiele <sthiele78@gmail.com>
+# Copyright (c) 2020, Sven Thiele <sthiele78@gmail.com>
 #
 # This file is part of clingoLP.
 #
@@ -18,7 +18,7 @@
 from setuptools import setup
 
 setup(
-    name='clingo-lp',
+    name='clingolp',
     version='0.1.0',
     url='http://github.com/sthiele/clingoLP/',
     license='GPLv3+',
@@ -27,8 +27,8 @@ setup(
     long_description_content_type="text/markdown",
     author='Sven Thiele',
     author_email='sthiele78@gmail.com',
-    packages=['clingoLP'],
-    package_dir={'clingoLP': 'src'},
+    packages=['clingolp'],
+    package_dir={'clingolp': 'src'},
     # scripts          = ['clingoLP.py'],
     entry_points={'console_scripts': ['clingoLP = clingoLP.app:main_clingo']}
 )
