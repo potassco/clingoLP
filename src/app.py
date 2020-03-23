@@ -1,6 +1,3 @@
-#!python
-# -*- coding: utf-8 -*-
-
 import sys
 import clingo
 from clingolp import lp_theory
