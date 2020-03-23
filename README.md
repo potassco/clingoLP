@@ -1,6 +1,6 @@
 # clingo[LP]  
 
-`clingo[LP]` extends of ASP solver `clingo` with linear constraints as dealt with in Linear Programming (LP).
+`clingo[LP]` extends the ASP solver `clingo` with linear constraints as dealt with in Linear Programming (LP).
 
 ## Prerequisites
 
