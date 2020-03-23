@@ -7,13 +7,11 @@ try:
     from clingolp.cplx import cplx
     cplx_found = True
 except ModuleNotFoundError as e:
-    print('no cplx solver found')
     cplx_found = False
 try:
     from clingolp.lps import lps
     lps_found = True
 except ModuleNotFoundError as e:
-    print('no lps solver found')
     lps_found = False
 
 
