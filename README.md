@@ -11,7 +11,7 @@ Use the provided conda environment:
 
 The propagator requires an LP solver. The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
 
-### `cplex`
+### CPLEX
 
 IBM provides a promotional version of `cplex` that is sufficient to solve small problems limited to 1000 variables and 1000 constraints.
 
@@ -21,12 +21,15 @@ To solve larger problems, you need to use the full version of CPLEX Studio.
 
 ## Syntax
 
-lp constraints can be expressed as follows:
+LP constraints can be expressed as follows:
 
-+ w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> >= k --> `&sum{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>n</sub>`} >= `k
-+ domain(x)={l,...,u} --> `&dom{`l`..`u`}=`x
-+ objective maximize function f_max(w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub>) --> `&maximize{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>1</sub>`}` (minimize analogous)
-+ to avoid syntax clashes you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
+|LP constraints | ClingoLP Syntax|
+|:--------------|:---------------|
+|w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> >= k | `&sum{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>n</sub>`} >=` k |
+| domain(x)={l,...,u} | `&dom{`l`..`u`} =` x
+| maximize: w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> | `&maximize{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>1</sub>`}` (minimize analogous)
+
+To avoid syntax clashes you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
 
 ## General usage of clingo[LP]
 
@@ -38,15 +41,15 @@ Example:
 
 + Options
   + -c show=1
-    + Enables lp system and objective function (default show=0)
+    + Show lp solution and value of objective function (default show=0)
   + -c accuracy=n
     + Prints n decimal positions (default accuracy=1)
   + -c epsilon='(n,m)'
     + Set epsilon to convert lhs > k into lhs >= k+n*10^-m (default epsilon=(1,3))
   + -c nstrict=1
     + Enables non-strict semantics (default nstrict=1)
-  + -c solver='lps'
-    + Selects a LP solver (default solver=cplx)
+  + -c solver=cplx
+    + Selects a LP solver (default solver=lps)
   + -c trace=1
     + Enables detailed output of theory propagation (default trace=0)
   + -c core_confl=n
