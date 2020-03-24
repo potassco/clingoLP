@@ -45,7 +45,7 @@ Example:
   + -c accuracy=n
     + Prints n decimal positions (default accuracy=1)
   + -c epsilon='(n,m)'
-    + Set epsilon to convert lhs > k into lhs >= k+n*10^-m (default epsilon=(1,3))
+    + Set epsilon to convert lhs > k into lhs >= k+n*10<sup>-m</sup> (default epsilon=(1,3))
   + -c nstrict=1
     + Enables non-strict semantics (default nstrict=1)
   + -c solver=cplx
