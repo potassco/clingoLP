@@ -61,3 +61,8 @@ Example:
   
   + All clingo options
   + Number solutions controlled via clingo
+  
+  ## Publication
+
+- [Clingo goes linear constraints over reals and integers, Janhunen, T., Kaminski, R., Ostrowski, M., Schellhorn, S., Wanko, P., & Schaub, T. (2017),  TPLP, 17(5-6), 872–888.](https://www.cs.uni-potsdam.de/wv/publications/DBLP_journals/tplp/JanhunenKOSWS17.pdf)
+
