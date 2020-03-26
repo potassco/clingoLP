@@ -41,17 +41,17 @@ class Application:
 
         with ctrl.solve(on_model=self.__on_model, on_statistics=self.__on_statistics, yield_=True) as handle:
             for model in handle:
-                sys.stdout.write("lp solution:")
+                if str(ctrl.get_const("show")) == '1':
+                    sys.stdout.write("lp solution:")
 
-                # for name, value in self.__theory.assignment(model.thread_id):
-                (opt, values) = self.prop.assignment(
-                    model.thread_id)
-                sys.stdout.write(" optimum={}".format(opt))
-                sys.stdout.write("\n")
-
-                for name in values:
-                    sys.stdout.write(" {}={}".format(name, values[name]))
+                    (opt, values) = self.prop.assignment(
+                        model.thread_id)
+                    sys.stdout.write(" optimum={}".format(opt))
                     sys.stdout.write("\n")
+
+                    for name in values:
+                        sys.stdout.write(" {}={}".format(name, values[name]))
+                        sys.stdout.write("\n")
 
 
 def main_clingo(args=None):
