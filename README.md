@@ -2,18 +2,17 @@
 
 `clingo[LP]` extends the ASP solver `clingo` with linear constraints as dealt with in Linear Programming (LP).
 
-## Prerequisites
+## Install
 
-Use the provided conda environment:
+Install via conda:
 
-+ `conda env create -f environment.yml`
-+ `conda activate clingoLP`
++ `conda install -c potassco -c conda-forge clingolp`
 
-The propagator requires an LP solver. The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
+## CPLEX
 
-### CPLEX
+The clingolp propagator requires an LP solver. The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
 
-IBM provides a promotional version of `cplex` that is sufficient to solve small problems limited to 1000 variables and 1000 constraints.
+IBM also provides a promotional version of `cplex` that is sufficient to solve small problems limited to 1000 variables and 1000 constraints.
 
 + `conda install -c ibmdecisionoptimization cplex`
 
@@ -64,5 +63,4 @@ Example:
   
 ## Publication
 
-- [Clingo goes linear constraints over reals and integers, Janhunen, T., Kaminski, R., Ostrowski, M., Schellhorn, S., Wanko, P., Schaub, T. (2017),  TPLP, 17(5-6), 872–888.](https://www.cs.uni-potsdam.de/wv/publications/DBLP_journals/tplp/JanhunenKOSWS17.pdf)
-
++ [Clingo goes linear constraints over reals and integers, Janhunen, T., Kaminski, R., Ostrowski, M., Schellhorn, S., Wanko, P., Schaub, T. (2017),  TPLP, 17(5-6), 872–888.](https://www.cs.uni-potsdam.de/wv/publications/DBLP_journals/tplp/JanhunenKOSWS17.pdf)
