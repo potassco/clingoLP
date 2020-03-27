@@ -6,7 +6,7 @@
 
 Install via conda:
 
-+ `conda install -c potassco -c conda-forge clingolp`
++ `conda install -c potassco -c conda-forge clingo-lp`
 
 ## CPLEX
 
