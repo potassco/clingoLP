@@ -4,7 +4,7 @@ setup(
     name='clingolp',
     version='0.1.0',
     url='http://github.com/potassco/clingoLP/',
-    license='GPLv3+',
+    license='MIT',
     description='',
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
