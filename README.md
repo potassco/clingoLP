@@ -36,7 +36,7 @@ Basic call:
 `clingoLP <encoding> <instance> <options>`
 
 Example:
-`clingoLP example_encoding.lp example_instance.lp -show-lp-solution 0`
+`clingoLP example_encoding.lp example_instance.lp --show-lp-solution 0`
 
 + Options
   + --show-lp-solution
