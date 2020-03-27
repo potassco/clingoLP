@@ -36,27 +36,27 @@ Basic call:
 `clingoLP <encoding> <instance> <options>`
 
 Example:
-`clingoLP example_encoding.lp example_instance.lp -c show=1`
+`clingoLP example_encoding.lp example_instance.lp -show-lp-solution 0`
 
 + Options
-  + -c show=1
-    + Show lp solution and value of objective function (default show=0)
-  + -c accuracy=n
+  + --show-lp-solution
+    + Show LP solution and value of objective function
+  + --lp-solver=cplx
+    + Selects a LP solver (default lp-solver=lps)
+  + --accuracy=n
     + Prints n decimal positions (default accuracy=1)
-  + -c epsilon='(n,m)'
-    + Set epsilon to convert lhs > k into lhs >= k+n*10<sup>-m</sup> (default epsilon=(1,3))
-  + -c nstrict=1
-    + Enables non-strict semantics (default nstrict=1)
-  + -c solver=cplx
-    + Selects a LP solver (default solver=lps)
-  + -c trace=1
-    + Enables detailed output of theory propagation (default trace=0)
-  + -c core_confl=n
-    + Searches for core conflicts if at least n% of the theory atoms are decided (default core_confl=20)
-  + -c prop_heur=n
-    + Starts a solve call of the LP solver if at least n% of the theory atoms are decided (default prop_heur=0)
-  + -c ilp=1
-    + Sets the LP solver to solve an Integer Linear Programming (ILP) problem (default ilp=0)
+  + --epsilon=n,m
+    + Set epsilon to convert lhs > k into lhs >= k+n*10<sup>-m</sup> (default epsilon=1,3)
+  + --strict
+    + Enables strict semantics
+  + --trace
+    + Enables detailed output of theory propagation
+  + --core-confl=n
+    + Searches for core conflicts if at least n% of the theory atoms are decided (default core-confl=20)
+  + --prop-heur=n
+    + Starts a solve call of the LP solver if at least n% of the theory atoms are decided (default prop-heur=0)
+  + --ilp
+    + Sets the LP solver to solve an Integer Linear Programming (ILP) problem
   
   + All clingo options
   + Number solutions controlled via clingo

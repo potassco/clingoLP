@@ -145,24 +145,7 @@ class Propagator:
             print('No wrapper class of ', self.__solver, ' found!')
             exit()
 
-    def __init__(self, ctrl):
-        show = ctrl.get_const("show")
-        accuracy = ctrl.get_const("accuracy")
-        nstrict = ctrl.get_const("nstrict")
-        epsilon = ctrl.get_const("epsilon")
-        solver = ctrl.get_const("solver")
-        trace = ctrl.get_const("trace")
-        core_confl = ctrl.get_const("core_confl")
-        prop_heur = ctrl.get_const("prop_heur")
-        debug = ctrl.get_const("debug")
-        ilp = ctrl.get_const("ilp")
-        # option data defaults -- conflicting with implementation
-
-        self.options = """
-        #const epsilon=(1,3). % similar to cplex default
-        #const core_confl=20.
-        #const prop_heur=0.
-        """
+    def __init__(self, ctrl, solver, show, accuracy, epsilon, nstrict, trace, core_confl, prop_heur, ilp, debug):
         self.__var_ta = {}              # {abs(lit) : [cnum]}
         self.__lit_ta = {}              # {lit : [cnum]}
         self.__constr = {}              # {cnum : (lit,constr)}
@@ -187,45 +170,8 @@ class Propagator:
         self.__undocalls = 0
         self.__checktime = 0.0
         self.__checkcalls = 0
-        if 'None' == str(accuracy):
-            self.__accuracy = 0
-        else:
-            self.__accuracy = accuracy.number
-        if 'None' == str(show) or show.number != 1:
-            self.__show = False
-        else:
-            self.__show = True
-        if 'None' == str(nstrict) or nstrict.number != 1:
-            self.__nstrict = False
-        else:
-            self.__nstrict = True
-        if 'None' == str(epsilon):  # epsilon=(a,b) -> a*10^-b
-            self.__epsilon = 0.001
-        else:
-            tmp = str(epsilon)[1:-1].split(",")
-            koef = float(tmp[0])
-            exp = float(tmp[1])
-            self.__epsilon = koef*10**-exp
-        if 'None' == str(trace) or trace.number != 1:
-            self.__trace = False
-        else:
-            self.__trace = True
-        if 'None' == str(core_confl):
-            self.__core_confl_heur = 100
-        else:
-            self.__core_confl_heur = core_confl.number
-        if 'None' == str(prop_heur):
-            self.__prop_heur = 100
-        else:
-            self.__prop_heur = prop_heur.number
 
-        if str(solver) == 'None':
-            if lps_found:
-                self.__solver = 'lps'
-            elif cplx_found:
-                self.__solver = 'cplx'
-
-        elif str(solver.name) == 'cplx':
+        if solver == 'cplx':
             if cplx_found:
                 self.__solver = 'cplx'
             else:
@@ -238,15 +184,19 @@ class Propagator:
                 print('lpsolve not found')
                 exit()
 
-        if 'None' == str(debug):
-            self.__debug = 0
-        else:
-            self.__debug = debug.number
-        if 'None' == str(ilp) or ilp.number != 1:
-            self.__ilp = False
-        else:
-            self.__ilp = True
+        self.__show = show
+        self.__accuracy = accuracy
+        self.__epsilon = epsilon
+        self.__nstrict = nstrict
+        self.__trace = trace
+        self.__core_confl_heur = core_confl
+        self.__prop_heur = prop_heur
+
+        self.__ilp = ilp
+        if self.__ilp:
             self.__epsilon = 1
+
+        self.__debug = debug
 
     def init(self, init):
         start = time.process_time()
