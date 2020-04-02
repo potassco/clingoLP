@@ -4,10 +4,9 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        os: ["ubuntu-latest", "windows-latest"]
         python-version: [3.6, 3.7, 3.8]
 
     steps:
@@ -46,6 +45,30 @@ jobs:
         run: |
           conda init bash
           source /Users/runner/.bash_profile
+          conda activate clingoLP
+          python setup.py install --user
+      - name: Test
+        run: |
+          ~/.local/bin/clingoLP example_instance.lp example_encoding.lp --show-lp-solution
+
+  build-windows:
+    runs-on: "windows-latest"
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: clingoLP
+      - name: Install clingoLP
+        run: |
+          conda init bash
+          source C:\Users\runneradmin\.bash_profile
           conda activate clingoLP
           python setup.py install --user
       - name: Test
