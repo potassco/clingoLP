@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        os: ["ubuntu-latest", "windows-latest"]
         python-version: [3.5, 3.6, 3.7, 3.8]
 
     steps:
@@ -22,6 +22,33 @@ jobs:
         # if: matrix.os=="macos-latest"
         env:
           BASHRC: ".bashrc"
+        run: |
+          conda init bash
+          source /home/runner/$BASHRC
+          conda activate clingoLP
+          python setup.py install --user
+      - name: Test
+        run: |
+          ~/.local/bin/clingoLP example_instance.lp example_encoding.lp --show-lp-solution
+
+  build-macos:
+    runs-on: "macos-latest"
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: clingoLP
+      - name: Install clingoLP
+        # if: matrix.os=="macos-latest"
+        env:
+          BASHRC: ".bash_profile"
         run: |
           conda init bash
           source /home/runner/$BASHRC
