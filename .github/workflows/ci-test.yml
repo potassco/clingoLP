@@ -21,7 +21,7 @@ jobs:
           conda install -c conda-forge lpsolve55
       - name: Install clingoLP
         run: |
-          python setup install
+          python setup.py install
       - name: Test
         run: |
           clingoLP example_instance.lp example_encoding.lp --show-lp-solution
