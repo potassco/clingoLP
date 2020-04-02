@@ -146,7 +146,7 @@ class Application:
 
 
 def main_clingo(args=None):
-    sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:])))
+    sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:]))-10)
 
 
-sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:])))
+sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:]))-10)
