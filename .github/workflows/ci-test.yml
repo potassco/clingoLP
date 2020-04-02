@@ -20,7 +20,6 @@ jobs:
           activate-environment: clingoLP
       - name: Install clingoLP
         run: |
-          conda a
           python setup.py install
       - name: Test
         run: |
