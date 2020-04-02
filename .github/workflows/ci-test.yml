@@ -70,4 +70,4 @@ jobs:
           python setup.py install
       - name: Test
         run: |
-          ~/.local/bin/clingoLP example_instance.lp example_encoding.lp --show-lp-solution
+          clingoLP.exe example_instance.lp example_encoding.lp --show-lp-solution
