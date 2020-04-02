@@ -20,7 +20,7 @@ jobs:
           activate-environment: clingoLP
       - name: Install clingoLP
         run: |
-          python setup.py install
+          python setup.py install develop
       - name: Test
         run: |
           clingoLP example_instance.lp example_encoding.lp --show-lp-solution
