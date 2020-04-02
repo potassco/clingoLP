@@ -25,6 +25,7 @@ jobs:
           python setup.py install --user
       - name: Test
         run: |
+          conda init bash
           source ~/.bashrc
           conda activate clingoLP
           pytest -v ./src/tests/test.py
