@@ -18,7 +18,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
           activate-environment: clingoLP
-          environment-file: environment.yml
           auto-activate-base: false
       - name: Install clingoLP
         run: |
