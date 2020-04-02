@@ -23,4 +23,4 @@ jobs:
           python setup.py install --user
       - name: Test
         run: |
-          clingoLP example_instance.lp example_encoding.lp --show-lp-solution
+          ~/.local/bin/clingoLP example_instance.lp example_encoding.lp --show-lp-solution
