@@ -21,7 +21,7 @@ jobs:
       - name: Install clingoLP
         run: |
           conda init bash
-          source ~/.bashrc
+          source ~/.bash_profile
           conda activate clingoLP
           python setup.py install --user
       - name: Test
