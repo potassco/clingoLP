@@ -18,9 +18,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
           activate-environment: clingoLP
-          auto-activate-base: false
       - name: Install clingoLP
         run: |
+          conda a
           python setup.py install
       - name: Test
         run: |
