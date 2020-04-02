@@ -19,6 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           conda create -n testenv
+          conda init bash
           conda activate testenv
           conda install -c potassco clingo
           conda install -c conda-forge lpsolve55
