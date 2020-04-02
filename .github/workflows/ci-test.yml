@@ -43,10 +43,11 @@ jobs:
           activate-environment: clingoLP
       - name: Install clingoLP
         run: |
-          python setup.py install
+          python setup.py install --user
+          conda install -c potassco clingo
       - name: Test
         run: |
-          clingoLP example_instance.lp example_encoding.lp --show-lp-solution
+          ~/.local/bin/clingoLP example_instance.lp example_encoding.lp --show-lp-solution
   # build-windows:
   #   runs-on: "windows-latest"
   #   strategy:
