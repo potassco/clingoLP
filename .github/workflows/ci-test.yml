@@ -28,7 +28,7 @@ jobs:
           conda init bash
           source ~/.bashrc
           conda activate clingoLP
-          python setup.py install --user
+          python setup.py install
           pytest -v ./src/tests/test.py
   # build-macos:
   #   runs-on: "macos-latest"
