@@ -18,6 +18,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+          conda create -n testenv
+          conda activate testenv
           conda install -c potassco clingo
           conda install -c conda-forge lpsolve55
       - name: Install clingoLP
