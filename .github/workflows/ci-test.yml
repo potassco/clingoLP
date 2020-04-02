@@ -8,7 +8,6 @@ jobs:
   #   strategy:
   #     matrix:
   #       python-version: [3.6, 3.7, 3.8]
-
   #   steps:
   #     - uses: actions/checkout@v2
   #     - uses: goanpeca/setup-miniconda@v1
@@ -24,32 +23,11 @@ jobs:
   #         conda activate clingoLP
   #         python setup.py install
   #         pytest -v ./src/tests/test.py
-
-  build-macos:
-    runs-on: "macos-latest"
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: goanpeca/setup-miniconda@v1
-        with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
-          activate-environment: clingoLP
-      - name: Install clingoLP
-        run: |
-          conda init bash
-          source /Users/runner/.bash_profile
-          conda activate clingoLP
-          python setup.py install
-          pytest -v ./src/tests/test.py
-  # build-windows:
-  #   runs-on: "windows-latest"
+  # build-macos:
+  #   runs-on: "macos-latest"
   #   strategy:
   #     matrix:
-  #       python-version: [3.6, 3.8]
+  #       python-version: [3.6, 3.7, 3.8]
   #   steps:
   #     - uses: actions/checkout@v2
   #     - uses: goanpeca/setup-miniconda@v1
@@ -58,9 +36,27 @@ jobs:
   #         python-version: ${{ matrix.python-version }}
   #         environment-file: environment.yml
   #         activate-environment: clingoLP
-  #     - name: Install clingoLP
+  #     - name: Test clingoLP
   #       run: |
+  #         conda init bash
+  #         source /Users/runner/.bash_profile
+  #         conda activate clingoLP
   #         python setup.py install
-  #     - name: Test
-  #       run: |
-  #         clingoLP.exe example_instance.lp example_encoding.lp --show-lp-solution
+  #         pytest -v ./src/tests/test.py
+  build-windows:
+    runs-on: "windows-latest"
+    strategy:
+      matrix:
+        python-version: [3.6, 3.8]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: clingoLP
+      - name: Test clingoLP
+        run: |
+          python setup.py install
+          pytest -v ./src/tests/test.py
