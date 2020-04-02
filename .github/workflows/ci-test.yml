@@ -65,10 +65,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
           activate-environment: clingoLP
-      - name: Install clingoLP
+      - name: Init bash
         run: |
           conda init bash
-          source C:\Users\runneradmin\.bashrc
+      - name: Install clingoLP
+        run: |
           conda activate clingoLP
           python setup.py install --user
       - name: Test
