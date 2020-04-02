@@ -19,12 +19,9 @@ jobs:
           environment-file: environment.yml
           activate-environment: clingoLP
       - name: Install clingoLP
-        # if: matrix.os=="macos-latest"
-        env:
-          BASHRC: ".bashrc"
         run: |
           conda init bash
-          source /home/runner/$BASHRC
+          source /home/runner/.bashrc
           conda activate clingoLP
           python setup.py install --user
       - name: Test
@@ -46,12 +43,9 @@ jobs:
           environment-file: environment.yml
           activate-environment: clingoLP
       - name: Install clingoLP
-        # if: matrix.os=="macos-latest"
-        env:
-          BASHRC: ".bash_profile"
         run: |
           conda init bash
-          source /home/runner/$BASHRC
+          source /Users/runner/.bash_profile
           conda activate clingoLP
           python setup.py install --user
       - name: Test
