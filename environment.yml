@@ -6,4 +6,5 @@ channels:
 dependencies:
   - clingo=5.4.0
   - lpsolve55=5.5
+  - pytest
 prefix: /home/sthiele/miniconda3/envs/clingoLP
