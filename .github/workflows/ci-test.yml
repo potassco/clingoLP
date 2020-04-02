@@ -67,7 +67,7 @@ jobs:
           activate-environment: clingoLP
       - name: Init bash
         run: |
-          conda init bash
+          conda init pwsh
       - name: Install clingoLP
         run: |
           conda activate clingoLP
