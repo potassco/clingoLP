@@ -133,16 +133,18 @@ class Application:
         with ctrl.solve(on_model=self.__on_model, on_statistics=self.__on_statistics, yield_=True) as handle:
             for model in handle:
                 if self.show_flag.value:
-                    sys.stdout.write("lp solution:")
-
-                    (opt, values) = self.prop.assignment(
+                    ass = self.prop.assignment(
                         model.thread_id)
-                    sys.stdout.write(" optimum={}".format(opt))
-                    sys.stdout.write("\n")
-
-                    for name in values:
-                        sys.stdout.write(" {}={}".format(name, values[name]))
+                    if ass != None:
+                        sys.stdout.write("lp solution:")
+                        (opt, values) = ass
+                        sys.stdout.write(" optimum={}".format(opt))
                         sys.stdout.write("\n")
+
+                        for name in values:
+                            sys.stdout.write(
+                                " {}={}".format(name, values[name]))
+                            sys.stdout.write("\n")
 
 
 def main_clingo(args=None):
