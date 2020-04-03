@@ -36,13 +36,13 @@ class lps:
 
     def solve_lp(self):
         self.__scalls = self.__scalls + 1
-        start = time.clock()
+        start = time.process_time()
         lpsolve('solve', self.__solver_obj)
-        self.__stime = self.__stime + time.clock() - start
+        self.__stime = self.__stime + time.process_time() - start
 
     def reset(self):
         self.__resetcalls = self.__resetcalls + 1
-        start = time.clock()
+        start = time.process_time()
         n = len(self.__clist)
         if n > 0:
             while n != 0:
@@ -50,13 +50,13 @@ class lps:
                 n -= 1
         self.__clist = []               # [({varname : weight}, rel, b)]
         self.__obj = {}                 # {varname : weight}
-        self.__resettime = self.__resettime + time.clock() - start
+        self.__resettime = self.__resettime + time.process_time() - start
 
     def add_constr(self, clist):
         ''' expects clist = [({varname : weight}, rel, b)]
         '''
         self.__addcalls = self.__addcalls + 1
-        start = time.clock()
+        start = time.process_time()
         self.__clist.extend(clist)
         nvar = len(self.__var_mapping)
         for constr in clist:
@@ -65,7 +65,7 @@ class lps:
                 tmp[self.__var_mapping[varname]-1] = constr[0][varname]
             lpsolve('add_constraint', self.__solver_obj,
                     tmp, constr[1], constr[2])
-        self.__addtime = self.__addtime + time.clock() - start
+        self.__addtime = self.__addtime + time.process_time() - start
 
     def set_obj(self, wopt, mode):
         ''' expects wopt = {varname : weights}; mode = max/min
