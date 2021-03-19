@@ -1,4 +1,5 @@
 import sys
+
 import clingo
 from clingo import Flag
 from clingolp import lp_theory
@@ -7,7 +8,7 @@ from clingolp import lp_theory
 class Application:
     def __init__(self):
         self.program_name = 'clingoLP'
-        self.version = "0.1.0"
+        self.version = "0.1.1"
         self.prop = None
         self.lp_assignment = None
         self.show_flag = Flag(False)
@@ -105,6 +106,41 @@ class Application:
     def validate_options(self):
         return True
 
+    def print_model(self, model, printer):
+
+        for sym in model.symbols(shown=True):
+            sys.stdout.write("{} ".format(sym))
+
+        sys.stdout.write("\n")
+
+        if self.show_flag.value:
+            ass = self.prop.assignment(
+                model.thread_id)
+            if ass != None:
+                sys.stdout.write("LP solution:\n")
+                (opt, values) = ass
+                sys.stdout.write("  optimum: {}\n".format(opt))
+
+                for name in values:
+                    sys.stdout.write(
+                        "  {}: {}".format(name, values[name]))
+                    sys.stdout.write("\n")
+        
+            sys.stdout.write("\n")
+        return True
+
+    def __on_model(self, model):
+       
+        ass = self.prop.assignment(model.thread_id)
+        if ass != None:
+            (opt, values) = ass
+            symbol = clingo.parse_term("lp_optimum(\"{}\")".format(opt))
+            model.extend([symbol])
+
+            for name in values:
+                symbol = clingo.parse_term("lp_solution({},\"{}\")".format(name, values[name]))
+                model.extend([symbol])
+
     def __on_statistics(self, step, accu):
         pass
 
@@ -131,22 +167,9 @@ class Application:
         ctrl.ground([("base", [])])
 
         with ctrl.solve(on_model=self.__on_model, on_statistics=self.__on_statistics, yield_=True) as handle:
-            for model in handle:
-                if self.show_flag.value:
-                    ass = self.prop.assignment(
-                        model.thread_id)
-                    if ass != None:
-                        sys.stdout.write("lp solution:")
-                        (opt, values) = ass
-                        sys.stdout.write(" optimum={}".format(opt))
-                        sys.stdout.write("\n")
-
-                        for name in values:
-                            sys.stdout.write(
-                                " {}={}".format(name, values[name]))
-                            sys.stdout.write("\n")
-
-
+            for _model in handle:
+                pass
+                
 def main_clingo(args=None):
     sys.exit(int(clingo.clingo_main(Application(), sys.argv[1:])))
 

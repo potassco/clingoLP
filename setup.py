@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='clingolp',
-    version='0.1.0',
+    version='0.1.1',
     url='http://github.com/potassco/clingoLP/',
     license='MIT',
     description='',
