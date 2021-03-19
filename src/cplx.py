@@ -42,22 +42,22 @@ class cplx:
 
     def solve_lp(self):
         self.__scalls = self.__scalls + 1
-        start = time.clock()
+        start = time.process_time()
         self.__solver_obj.solve()
-        self.__stime = self.__stime + time.clock() - start
+        self.__stime = self.__stime + time.process_time() - start
 
     def reset(self):
         self.__resetcalls = self.__resetcalls + 1
-        start = time.clock()
+        start = time.process_time()
         self.__clist = []               # [({varname : weight}, rel, b)]
         self.__obj = {}                 # {varname : weight}
         self.__solver_obj.linear_constraints.delete()
-        self.__resettime = self.__resettime + time.clock() - start
+        self.__resettime = self.__resettime + time.process_time() - start
 
     # expects clist = [({varname : weight}, rel, b)]
     def add_constr(self, clist):
         self.__addcalls = self.__addcalls + 1
-        start = time.clock()
+        start = time.process_time()
         self.__clist.extend(clist)
         lin_expr = []
         rels = []
@@ -78,7 +78,7 @@ class cplx:
             rhs.append(b)
         self.__solver_obj.linear_constraints.add(
             lin_expr=lin_expr, senses=rels, rhs=rhs)
-        self.__addtime = self.__addtime + time.clock() - start
+        self.__addtime = self.__addtime + time.process_time() - start
 
     def set_obj(self, wopt, mode):
         ''' expects wopt = {varname : weights}; mode = max/min
