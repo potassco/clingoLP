@@ -2,7 +2,8 @@ import sys
 import time
 
 # lpsolve wrapper
-from lp_solve import *
+import lp_solve
+from lp_solve import lpsolve
 
 
 class lps:
@@ -22,7 +23,7 @@ class lps:
         self.set_mapping(mapping)
         nvar = len(self.__var_mapping)
         self.__solver_obj = lpsolve('make_lp', 0, nvar)
-        lpsolve('set_verbose', self.__solver_obj, IMPORTANT)
+        lpsolve('set_verbose', self.__solver_obj, lp_solve.IMPORTANT)
         self.set_doms()
         if ilp:
             self.set_ilp()
