@@ -135,10 +135,10 @@ class Application:
         if ass != None:
             (opt, values) = ass
             model.extend(
-                [clingo.Function('lp_optimum', [clingo.String(str(opt))])])
+                [clingo.Function('_lp_optimum', [clingo.String(str(opt))])])
 
             for name in values:
-                model.extend([clingo.Function('lp_solution', [
+                model.extend([clingo.Function('_lp_solution', [
                              clingo.Function(name, []), clingo.String(str(values[name]))])])
 
     def __on_statistics(self, step, accu):
