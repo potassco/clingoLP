@@ -116,21 +116,23 @@ class Application:
         if self.show_flag.value:
             ass = self.prop.assignment(
                 model.thread_id)
-            if ass != None:
-                sys.stdout.write("LP solution:\n")
+            if ass is None:
+                sys.stdout.write("LP solution: None\n")
+            else:
+                sys.stdout.write("LP solution: ")
                 (opt, values) = ass
-                sys.stdout.write("  optimum: {}\n".format(opt))
+                sys.stdout.write("optimum={}\n".format(opt))
 
                 for name in values:
                     sys.stdout.write(
-                        "  {}: {}".format(name, values[name]))
-                    sys.stdout.write("\n")
+                        "{}={} ".format(name, values[name]))
+                sys.stdout.write("\n")
 
-            sys.stdout.write("\n")
+            self.prop.print_solve_stats(model.thread_id)
+
         return True
 
     def __on_model(self, model):
-
         ass = self.prop.assignment(model.thread_id)
         if ass != None:
             (opt, values) = ass
