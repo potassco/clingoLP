@@ -117,6 +117,9 @@ class Propagator:
                 print(self.times_print)
                 print('')
 
+        def print_solve_stats(self, show):
+            print(self.times_print)
+
         def assignment(self):
             return self.current_assignment
 
@@ -226,6 +229,10 @@ class Propagator:
     def print_assignment(self, thread_id):
         state = self.__state(thread_id)
         state.print_assignment(self.__show)
+
+    def print_solve_stats(self, thread_id):
+        state = self.__state(thread_id)
+        state.print_solve_stats(self.__show)
 
     def assignment(self, thread_id):
         state = self.__state(thread_id)
