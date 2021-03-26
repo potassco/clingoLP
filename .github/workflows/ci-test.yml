@@ -3,31 +3,11 @@ name: CI Test for clingoLP
 on: [push]
 
 jobs:
-  build-linux:
+  build:
     runs-on: "ubuntu-latest"
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
-          activate-environment: clingoLP
-      - name: Test clingoLP
-        run: |
-          conda init bash
-          source ~/.bashrc
-          conda activate clingoLP
-          python setup.py install
-          pytest -v ./src/tests/test.py
-
-  build-macos:
-    runs-on: "macos-latest"
-    strategy:
-      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
@@ -37,28 +17,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
           activate-environment: clingoLP
+
       - name: Test clingoLP
+        shell: pwsh
         run: |
-          conda init bash
-          source /Users/runner/.bash_profile
-          conda activate clingoLP
           python setup.py install
           pytest -v ./src/tests/test.py
 
-  build-windows:
-    runs-on: "windows-latest"
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
-          activate-environment: clingoLP
-      - name: Test clingoLP
-        run: |
-          python setup.py install
-          pytest -v ./src/tests/test.py
