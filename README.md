@@ -10,7 +10,8 @@ Install via conda:
 
 ## CPLEX
 
-The clingolp propagator requires an LP solver. The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
+The clingolp propagator requires an LP solver.
+The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
 
 IBM also provides a promotional version of `cplex` that is sufficient to solve small problems limited to 1000 variables and 1000 constraints.
 
@@ -28,7 +29,7 @@ LP constraints can be expressed as follows:
 | domain(x)={l,...,u} | `&dom{`l`..`u`} =` x
 | maximize: w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> | `&maximize{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>1</sub>`}` (minimize analogous)
 
-To avoid syntax clashes you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
+To avoid syntax clashes, you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
 
 ## General usage of clingo[LP]
 
@@ -59,7 +60,7 @@ Example:
     + Sets the LP solver to solve an Integer Linear Programming (ILP) problem
   
   + All clingo options
-  + Number solutions controlled via clingo
+  + Number of solutions controlled via clingo
   
 ## Publication
 
