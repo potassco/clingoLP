@@ -23,4 +23,3 @@ jobs:
         run: |
           python setup.py install
           pytest -v ./src/tests/test.py
-
