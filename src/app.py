@@ -113,7 +113,7 @@ class Application:
 
         sys.stdout.write("\n")
 
-        if self.show_flag.value:
+        if self.show_flag.flag:
             ass = self.prop.assignment(
                 model.thread_id)
             if ass is None:
@@ -149,13 +149,13 @@ class Application:
     def main(self, ctrl, files):
         self.prop = lp_theory.Propagator(
             ctrl, solver=self.lp_solver,
-            show=self.show_flag.value,
+            show=self.show_flag.flag,
             accuracy=self.accuracy, epsilon=self.epsilon,
-            nstrict=not self.strict_flag.value,
-            trace=self.trace_flag.value,
+            nstrict=not self.strict_flag.flag,
+            trace=self.trace_flag.flag,
             core_confl=self.core_confl,
             prop_heur=self.prop_heur,
-            ilp=self.ilp_flag.value,
+            ilp=self.ilp_flag.flag,
             debug=0)
 
         ctrl.register_propagator(self.prop)
