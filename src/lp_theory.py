@@ -148,7 +148,7 @@ class Propagator:
             print('No wrapper class of ', self.__solver, ' found!')
             exit()
 
-    def __init__(self, ctrl, solver, show, accuracy, epsilon, nstrict, trace, core_confl, prop_heur, ilp, debug):
+    def __init__(self, ctrl, solver, show, accuracy, epsilon, strict, trace, core_confl, prop_heur, ilp, debug):
         self.__var_ta = {}              # {abs(lit) : [cnum]}
         self.__lit_ta = {}              # {lit : [cnum]}
         self.__constr = {}              # {cnum : (lit,constr)}
@@ -190,7 +190,7 @@ class Propagator:
         self.__show = show
         self.__accuracy = accuracy
         self.__epsilon = epsilon
-        self.__nstrict = nstrict
+        self.__strict = strict
         self.__trace = trace
         self.__core_confl_heur = core_confl
         self.__prop_heur = prop_heur
@@ -204,6 +204,7 @@ class Propagator:
     def init(self, init):
         start = time.process_time()
         for atom in init.theory_atoms:
+            print("atom:", atom)
             term = atom.term
             if term.name == 'lp' or term.name == 'sum':
                 self.__lp_structure(atom, init)
@@ -434,7 +435,7 @@ class Propagator:
             weight = self.__get_weight(state.cond_trail, constr[0][varname])
             if varname in self.__varpos:
                 trow[varname] = weight
-        if state.active_cnum[cnum][1] < 0 and not self.__nstrict:
+        if state.active_cnum[cnum][1] < 0 and self.__strict:
             if rel == '<':
                 rel = '>='
             elif rel == '>':
@@ -602,7 +603,7 @@ class Propagator:
                         self.__add_aux(control, state, cnum, lit)
                     if state.active_cnum[cnum][0] == 0:
                         state.recent_active.append(cnum)
-            if not self.__nstrict and -lit in self.__lit_ta:
+            if self.__strict and -lit in self.__lit_ta:
                 if lit not in state.lp_trail:
                     state.lp_trail.append(lit)
                 for cnum in self.__lit_ta[-lit]:
