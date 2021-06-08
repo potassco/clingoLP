@@ -151,7 +151,7 @@ class Application:
             ctrl, solver=self.lp_solver,
             show=self.show_flag.flag,
             accuracy=self.accuracy, epsilon=self.epsilon,
-            nstrict=not self.strict_flag.flag,
+            strict=self.strict_flag.flag,
             trace=self.trace_flag.flag,
             core_confl=self.core_confl,
             prop_heur=self.prop_heur,
