@@ -7,4 +7,7 @@ dependencies:
   - clingo=5.5.0
   - lpsolve55=5.5
   - pytest
+  - pylint
+  - autopep8
+  - mypy
 prefix: /home/sthiele/miniconda3/envs/clingoLP
