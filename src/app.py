@@ -13,7 +13,7 @@ class Application:
         self.lp_assignment = None
         self.show_flag = Flag(False)
         self.lp_solver = "lps"
-        self.accuracy = 1
+        self.accuracy = 3
         self.epsilon = 1*10**-3
         self.strict_flag = Flag(False)
         self.trace_flag = Flag(False)
@@ -36,7 +36,7 @@ class Application:
                          self.show_flag)
 
         options.add(group, "accuracy",
-                    "Set decimal position of LP solver accuracy (default accuracy=1)",
+                    "Set decimal position of LP solver accuracy (default accuracy=3)",
                     self.parse_accuracy,  argument="n")
 
         options.add(group, "epsilon",
@@ -165,6 +165,8 @@ class Application:
             files.append("-")
         for f in files:
             ctrl.load(f)
+
+        # rewrite
 
         ctrl.ground([("base", [])])
 
