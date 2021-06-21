@@ -1,11 +1,16 @@
 import clingo
 from typing import Sequence, List
+from typing import List, Sequence, Optional, MutableMapping, Tuple, Set, cast
 from clingo.propagator import (
     PropagateInit, PropagateControl, Assignment, Trail)
 from clingo.theory_atoms import TheoryTerm, TheoryAtom, TheoryElement
 import sys
 import time
 
+from clingo import ast
+
+from clingo.control import Control
+from clingo.ast import parse_files, AST, ProgramBuilder, Transformer
 
 try:
     from clingolp.cplx import cplx
@@ -41,13 +46,47 @@ theory = """
     };
 
     &lp/0   : lin_term, {<=,>=,>,<,=,!=}, bounds, any;
-    &sum/0   : lin_term, {<=,>=,>,<,=,!=}, bounds, any;
+    &sum/1   : lin_term, {<=,>=,>,<,=,!=}, bounds, any;
     &objective/1 : lin_term, head;
     &minimize/0 : lin_term, head;
     &maximize/0 : lin_term, head;
     &dom/0 : bounds, {=}, lin_term, head
 }.
 """
+
+
+def rewrite(ctl: Control, files: Sequence[str]):
+    with ProgramBuilder(ctl) as bld:
+        hbt = HeadBodyTransformer()
+        parse_files(
+            files,
+            lambda stm: bld.add(cast(AST, hbt.visit(stm))))
+
+
+class HeadBodyTransformer(Transformer):
+    '''
+    Transformer to tag head and body occurrences of `&sum` atoms.
+    '''
+
+    def visit_Literal(self, lit: AST, in_lit: bool = False) -> AST:
+        '''
+        Visit literal; any theory atom in a literal is a body literal.
+        '''
+        return lit.update(**self.visit_children(lit, True))
+
+    def visit_TheoryAtom(self, atom: AST, in_lit: bool = False) -> AST:
+        '''
+        Visit theory atom and tag as given by in_lit.
+        '''
+        # pylint: disable=invalid-name,no-self-use
+        term = atom.term
+        if term.name == "sum" and not term.arguments:
+            loc = "body" if in_lit else "head"
+            atom.term = ast.Function(
+                term.location,
+                term.name,
+                [ast.Function(term.location, loc, [], False)], False)
+        return atom
 
 
 class Propagator:

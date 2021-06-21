@@ -162,11 +162,8 @@ class Application:
         ctrl.add("base", [], lp_theory.theory)
 
         if not files:
-            files.append("-")
-        for f in files:
-            ctrl.load(f)
-
-        # rewrite
+            files = ["-"]
+        lp_theory.rewrite(ctrl, files)
 
         ctrl.ground([("base", [])])
 
