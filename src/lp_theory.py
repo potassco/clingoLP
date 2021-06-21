@@ -86,6 +86,12 @@ class HeadBodyTransformer(Transformer):
                 term.location,
                 term.name,
                 [ast.Function(term.location, loc, [], False)], False)
+        elif term.name == "lp" and not term.arguments:
+            loc = "body" if in_lit else "head"
+            atom.term = ast.Function(
+                term.location,
+                term.name,
+                [ast.Function(term.location, loc, [], False)], False)
         return atom
 
 
@@ -250,9 +256,7 @@ class Propagator:
 
         for atom in init.theory_atoms:
             term: TheoryTerm = atom.term
-            if term.name == 'lp':
-                self.__lp_structure(atom, init, "head")
-            if term.name == 'sum':
+            if term.name == 'lp' or term.name == 'sum':
                 marker = term.arguments[0]
                 self.__lp_structure(atom, init, str(marker))
             if term.name == 'objective' or term.name == 'minimize' or term.name == 'maximize':
