@@ -191,9 +191,10 @@ class Propagator:
             print('No wrapper class of ', self.__solver, ' found!')
             exit()
 
-    def __init__(self, ctrl, solver, show, accuracy, epsilon, strict, trace, core_confl, prop_heur, ilp, debug):
+    def __init__(self, ctrl, solver, show, accuracy, epsilon, trace, core_confl, prop_heur, ilp, debug):
         self.__var_ta = {}              # {abs(lit) : [cnum]}
         self.__lit_ta = {}              # {lit : [cnum]}
+        self.__lit_ta_body = {}         # {lit : [cnum]}
         self.__constr = {}              # {cnum : (lit,constr)}
         self.__clit_constr = {}         # {clit : [cnum]}
         self.__constr_clit = {}         # {cnum : [clits]}
@@ -233,7 +234,6 @@ class Propagator:
         self.__show = show
         self.__accuracy = accuracy
         self.__epsilon = epsilon
-        self.__strict = strict
         self.__trace = trace
         self.__core_confl_heur = core_confl
         self.__prop_heur = prop_heur
@@ -245,22 +245,17 @@ class Propagator:
         self.__debug = debug
 
     def init(self, init: PropagateInit):
-        # print("init  assignment", init.assignment.trail)
 
-        # trail: Trail = init.assignment.trail
-        # for e in trail:
-        #     print(e)
-        print("init  symbolic_atoms")
-        symbolic_atoms = init.symbolic_atoms
-        for sym in symbolic_atoms:
-            print("sym:", sym.symbol, sym.literal)
         start = time.process_time()
 
         print("init  theory_atoms")
         for atom in init.theory_atoms:
             term: TheoryTerm = atom.term
-            if term.name == 'lp' or term.name == 'sum':
-                self.__lp_structure(atom, init)
+            if term.name == 'lp':
+                self.__lp_structure(atom, init, "head")
+            if term.name == 'sum':
+                marker = term.arguments[0]
+                self.__lp_structure(atom, init, str(marker))
             if term.name == 'objective' or term.name == 'minimize' or term.name == 'maximize':
                 self.__lp_objective(atom, init)
             if term.name == 'dom':
@@ -279,7 +274,9 @@ class Propagator:
         self.__inittime += end-start
         self.__initcalls += 1
         self.__time = self.__time + end-start
-        print("__lit_ta:", self.__lit_ta)
+
+        # print("__lit_ta:", self.__lit_ta)
+        # print("__lit_ta_body:", self.__lit_ta_body)
 
     def print_assignment(self, thread_id):
         state: Propagator.State = self.__state(thread_id)
@@ -293,7 +290,7 @@ class Propagator:
         state: Propagator.State = self.__state(thread_id)
         return state.assignment()
 
-    def __lp_structure(self, atom: TheoryAtom, init: PropagateInit):
+    def __lp_structure(self, atom: TheoryAtom, init: PropagateInit, marker: str):
         ''' resolves structure of lp-statements and saves it
         '''
         lit = init.solver_literal(atom.literal)
@@ -346,6 +343,8 @@ class Propagator:
         self.__constr[n] = (lit, (dict(weights), rel, self.__calc_bound(rhs)))
         self.__var_ta.setdefault(var, []).append(n)
         self.__lit_ta.setdefault(lit, []).append(n)
+        if str(marker) == "body":
+            self.__lit_ta_body.setdefault(lit, []).append(n)
 
     def __lp_objective(self, atom: TheoryAtom, init: PropagateInit):
         ''' resolves structure of objective-statements and saves it
@@ -479,7 +478,7 @@ class Propagator:
         clist = {}
         for cnum in cnums:
             clist[cnum] = (self.__get_constr(state, cnum))
-            print("cnum", cnum, ":", clist[cnum])
+            print("__get_constr cnum", cnum, ": ", clist[cnum])
         return clist
 
     def __get_constr(self, state: State, cnum):
@@ -493,7 +492,7 @@ class Propagator:
             weight = self.__get_weight(state.cond_trail, constr[0][varname])
             if varname in self.__varpos:
                 trow[varname] = weight
-        if state.active_cnum[cnum][1] < 0 and self.__strict:
+        if state.active_cnum[cnum][1] < 0:
             if rel == '<':
                 rel = '>='
             elif rel == '>':
@@ -664,11 +663,11 @@ class Propagator:
                         self.__add_aux(control, state, cnum, lit)
                     if state.active_cnum[cnum][0] == 0:
                         state.recent_active.append(cnum)
-            if self.__strict and -lit in self.__lit_ta:
-                print("strict:", -lit, self.__lit_ta)
+            if -lit in self.__lit_ta_body:
+                # print("body/strict:", -lit, self.__lit_ta_body)
                 if lit not in state.lp_trail:
                     state.lp_trail.append(lit)
-                for cnum in self.__lit_ta[-lit]:
+                for cnum in self.__lit_ta_body[-lit]:
                     state.active_cnum[cnum][1] = -1
                     rel = self.__constr[cnum][1][1]
                     if rel == '=':

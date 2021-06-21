@@ -48,8 +48,6 @@ Example:
     + Prints n decimal positions (default accuracy=3)
   + --epsilon=n,m
     + Set epsilon to convert lhs > k into lhs >= k+n*10<sup>-m</sup> (default epsilon=1,3)
-  + --strict
-    + Enables strict semantics
   + --trace
     + Enables detailed output of theory propagation
   + --core-confl=n
