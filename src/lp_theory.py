@@ -248,7 +248,6 @@ class Propagator:
 
         start = time.process_time()
 
-        print("init  theory_atoms")
         for atom in init.theory_atoms:
             term: TheoryTerm = atom.term
             if term.name == 'lp':
@@ -294,8 +293,6 @@ class Propagator:
         ''' resolves structure of lp-statements and saves it
         '''
         lit = init.solver_literal(atom.literal)
-
-        print("atom:", atom, atom.literal, lit)
         n = len(self.__constr)+1
         init.add_watch(lit)
         init.add_watch(-lit)
@@ -448,7 +445,6 @@ class Propagator:
     def __solve(self, state: State):
         ''' solve call
         '''
-        print("__solve")
         if state.lp.is_valid():
             state.clist.update(self.__get_constrs(state, state.recent_active))
             cnums = state.recent_active
@@ -478,7 +474,7 @@ class Propagator:
         clist = {}
         for cnum in cnums:
             clist[cnum] = (self.__get_constr(state, cnum))
-            print("__get_constr cnum", cnum, ": ", clist[cnum])
+            # print("__get_constr cnum", cnum, ": ", clist[cnum])
         return clist
 
     def __get_constr(self, state: State, cnum):
@@ -555,7 +551,7 @@ class Propagator:
 
     def propagate(self, control: PropagateControl, changes: Sequence[int]):
 
-        print("propagate changes", changes)
+        # print("propagate changes", changes)
 
         start = time.process_time()
         state: Propagator.State = self.__state(control.thread_id)
@@ -698,7 +694,7 @@ class Propagator:
         if state.active_cnum[cnum][2] == 0:
             state.active_cnum[cnum][2] = 1
             nlit = control.add_literal()
-            print("__add_aux, cnum", cnum, "lit", lit, "new_lit:", nlit)
+            # print("__add_aux, cnum", cnum, "lit", lit, "new_lit:", nlit)
             control.add_watch(nlit)
             control.add_watch(-nlit)
             state.eqlit[cnum] = nlit
