@@ -1,4 +1,8 @@
 import clingo
+from typing import Sequence, List
+from clingo.propagator import (
+    PropagateInit, PropagateControl, Assignment, Trail)
+from clingo.theory_atoms import TheoryTerm, TheoryAtom, TheoryElement
 import sys
 import time
 
@@ -123,10 +127,10 @@ class Propagator:
         def assignment(self):
             return self.current_assignment
 
-    def __state(self, sid):
+    def __state(self, sid) -> State:
         while len(self.__states) <= sid:
             self.__states.append(Propagator.State())
-            state = self.__states[len(self.__states)-1]
+            state: Propagator.State = self.__states[len(self.__states)-1]
             self.update_state_info(state)
         return self.__states[sid]
 
@@ -201,11 +205,21 @@ class Propagator:
 
         self.__debug = debug
 
-    def init(self, init):
+    def init(self, init: PropagateInit):
+        # print("init  assignment", init.assignment.trail)
+
+        # trail: Trail = init.assignment.trail
+        # for e in trail:
+        #     print(e)
+        print("init  symbolic_atoms")
+        symbolic_atoms = init.symbolic_atoms
+        for sym in symbolic_atoms:
+            print("sym:", sym.symbol, sym.literal)
         start = time.process_time()
+
+        print("init  theory_atoms")
         for atom in init.theory_atoms:
-            print("atom:", atom)
-            term = atom.term
+            term: TheoryTerm = atom.term
             if term.name == 'lp' or term.name == 'sum':
                 self.__lp_structure(atom, init)
             if term.name == 'objective' or term.name == 'minimize' or term.name == 'maximize':
@@ -226,23 +240,26 @@ class Propagator:
         self.__inittime += end-start
         self.__initcalls += 1
         self.__time = self.__time + end-start
+        print("__lit_ta:", self.__lit_ta)
 
     def print_assignment(self, thread_id):
-        state = self.__state(thread_id)
+        state: Propagator.State = self.__state(thread_id)
         state.print_assignment(self.__show)
 
     def print_solve_stats(self, thread_id):
-        state = self.__state(thread_id)
+        state: Propagator.State = self.__state(thread_id)
         state.print_solve_stats(self.__show)
 
     def assignment(self, thread_id):
-        state = self.__state(thread_id)
+        state: Propagator.State = self.__state(thread_id)
         return state.assignment()
 
-    def __lp_structure(self, atom, init):
+    def __lp_structure(self, atom: TheoryAtom, init: PropagateInit):
         ''' resolves structure of lp-statements and saves it
         '''
         lit = init.solver_literal(atom.literal)
+
+        print("atom:", atom, atom.literal, lit)
         n = len(self.__constr)+1
         init.add_watch(lit)
         init.add_watch(-lit)
@@ -291,7 +308,7 @@ class Propagator:
         self.__var_ta.setdefault(var, []).append(n)
         self.__lit_ta.setdefault(lit, []).append(n)
 
-    def __lp_objective(self, atom, init):
+    def __lp_objective(self, atom: TheoryAtom, init: PropagateInit):
         ''' resolves structure of objective-statements and saves it
         '''
         obj = atom.elements
@@ -314,7 +331,7 @@ class Propagator:
             pol = -1
         self.__set_objective(init, obj, pol)
 
-    def __set_objective(self, init, obj, pol):
+    def __set_objective(self, init: PropagateInit, obj: List[TheoryElement], pol):
         for elem in obj:
             if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
                 koef = self.__calc_bound(elem.terms[0].arguments[0])
@@ -345,7 +362,7 @@ class Propagator:
             else:
                 self.__objective.setdefault(varname, []).append(pol*koef)
 
-    def __lp_domain(self, atom):
+    def __lp_domain(self, atom: TheoryAtom):
         ''' resolves structure of domain-statements and saves it
         '''
         varname = str(atom.guard[1])
@@ -359,7 +376,7 @@ class Propagator:
             ub = 'none'
             self.__bounds.setdefault(varname, []).append((lb, ub))
 
-    def __calc_bound(self, expr):
+    def __calc_bound(self, expr: TheoryTerm):
         ''' calculates bounds of input expressions
         '''
         args = expr.arguments
@@ -390,9 +407,10 @@ class Propagator:
         else:
             return float(str(num)[1:-1])
 
-    def __solve(self, state):
+    def __solve(self, state: State):
         ''' solve call
         '''
+        print("__solve")
         if state.lp.is_valid():
             state.clist.update(self.__get_constrs(state, state.recent_active))
             cnums = state.recent_active
@@ -416,15 +434,16 @@ class Propagator:
         state.save_stats(self.__solver, self.__debug, self.__initcalls, self.__inittime, self.__propcalls,
                          self.__proptime, self.__undocalls, self.__undotime, self.__checkcalls, self.__checktime)
 
-    def __get_constrs(self, state, cnums):
+    def __get_constrs(self, state: State, cnums):
         ''' get constraints wrt current assignment
         '''
         clist = {}
         for cnum in cnums:
             clist[cnum] = (self.__get_constr(state, cnum))
+            print("cnum", cnum, ":", clist[cnum])
         return clist
 
-    def __get_constr(self, state, cnum):
+    def __get_constr(self, state: State, cnum):
         ''' evaluates constr wrt current assignment
         '''
         constr = self.__constr[cnum][1]
@@ -471,7 +490,7 @@ class Propagator:
                     b = b - self.__epsilon
         return (trow, rel, b)
 
-    def __set_obj(self, state):
+    def __set_obj(self, state: State):
         ''' sets objective dictionary {var: weight} wrt conditionals
         '''
         wopt = {}
@@ -496,9 +515,12 @@ class Propagator:
                         tmp = tmp + weight[clit]
         return tmp
 
-    def propagate(self, control, changes):
+    def propagate(self, control: PropagateControl, changes: Sequence[int]):
+
+        print("propagate changes", changes)
+
         start = time.process_time()
-        state = self.__state(control.thread_id)
+        state: Propagator.State = self.__state(control.thread_id)
         self.__update_state(control, changes, state)
         if (state.recent_active != [] or state.oclit_recent_active == 1) and state.lits_current*100 / self.__lits_total_num >= self.__prop_heur:
             self.__solve(state)
@@ -524,9 +546,9 @@ class Propagator:
         self.__time = self.__time + end-start
         return True
 
-    def undo(self, thread_id, assign, changes):
+    def undo(self, thread_id: int, assignment: Assignment, changes: Sequence[int]):
         start = time.process_time()
-        state = self.__state(thread_id)
+        state: Propagator.State = self.__state(thread_id)
         lpid = state.stack[-1][1]
         cid = state.stack[-1][2]
         oid = state.stack[-1][3]
@@ -558,9 +580,9 @@ class Propagator:
         self.__undocalls += 1
         self.__time = self.__time + end-start
 
-    def check(self, control):
+    def check(self, control: PropagateControl):
         start = time.process_time()
-        state = self.__state(control.thread_id)
+        state: Propagator.State = self.__state(control.thread_id)
         end = time.process_time()
         self.__checktime += end-start
         self.__checkcalls += 1
@@ -582,7 +604,7 @@ class Propagator:
         # print ''
         return True
 
-    def __update_state(self, control, changes, state):
+    def __update_state(self, control: PropagateControl, changes: Sequence[int], state: State):
         ''' updates state wrt to changes
         '''
         if len(changes) > 0:
@@ -604,6 +626,7 @@ class Propagator:
                     if state.active_cnum[cnum][0] == 0:
                         state.recent_active.append(cnum)
             if self.__strict and -lit in self.__lit_ta:
+                print("strict:", -lit, self.__lit_ta)
                 if lit not in state.lp_trail:
                     state.lp_trail.append(lit)
                 for cnum in self.__lit_ta[-lit]:
@@ -631,12 +654,13 @@ class Propagator:
                 if state.active_oclit == 0:
                     state.oclit_recent_active = 1
 
-    def __add_aux(self, control, state, cnum, lit):
-        ''' adds an literal l to choose on l or -l for disjunktion of '!='
+    def __add_aux(self, control: PropagateControl, state: State, cnum, lit):
+        ''' adds an literal l to choose on l or -l for disjunction of '!='
         '''
         if state.active_cnum[cnum][2] == 0:
             state.active_cnum[cnum][2] = 1
             nlit = control.add_literal()
+            print("__add_aux, cnum", cnum, "lit", lit, "new_lit:", nlit)
             control.add_watch(nlit)
             control.add_watch(-nlit)
             state.eqlit[cnum] = nlit
@@ -645,7 +669,7 @@ class Propagator:
             control.add_clause([lit, nlit], lock=True)
             state.total_lits += 1
 
-    def __check_consistency(self, control, state):
+    def __check_consistency(self, control: PropagateControl, state: State):
         ''' returns false if lp system inconsistent else true
         '''
         if not state.lp.is_sat() and state.lits_current*100 / state.total_lits >= self.__core_confl_heur:
@@ -677,7 +701,7 @@ class Propagator:
             print('If this was printed, then I did something really wrong!')
         return True
 
-    def __core_confl(self, state, confl_cnums, active_cnums):
+    def __core_confl(self, state: State, confl_cnums, active_cnums):
         ''' search core conflict
         '''
         constr_list = []
@@ -701,7 +725,7 @@ class Propagator:
                 break
         return confl_cnums
 
-    def __get_confl(self, state, confl_cnums):
+    def __get_confl(self, state: State, confl_cnums):
         ''' generates conflict clause from a conflict
         '''
         clause = []

@@ -23,11 +23,11 @@ To solve larger problems, you need to use the full version of CPLEX Studio.
 
 LP constraints can be expressed as follows:
 
-|LP constraints | ClingoLP Syntax|
-|:--------------|:---------------|
-|w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> >= k | `&sum{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>n</sub>`} >=` k |
-| domain(x)={l,...,u} | `&dom{`l`..`u`} =` x
-| maximize: w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> | `&maximize{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>1</sub>`}` (minimize analogous)
+| LP constraints                                                      | ClingoLP Syntax                                                                                         |
+| :------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------ |
+| w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> >= k      | `&sum{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>n</sub>`} >=` k                      |
+| domain(x)={l,...,u}                                                 | `&dom{`l`..`u`} =` x                                                                                    |
+| maximize: w<sub>1</sub>x<sub>1</sub>+...+w<sub>n</sub>x<sub>n</sub> | `&maximize{`w<sub>1</sub>`*`x<sub>1</sub>`;`...`;`w<sub>n</sub>`*`x<sub>1</sub>`}` (minimize analogous) |
 
 To avoid syntax clashes, you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
 
@@ -45,7 +45,7 @@ Example:
   + --lp-solver=cplx
     + Selects a LP solver (default lp-solver=lps)
   + --accuracy=n
-    + Prints n decimal positions (default accuracy=1)
+    + Prints n decimal positions (default accuracy=3)
   + --epsilon=n,m
     + Set epsilon to convert lhs > k into lhs >= k+n*10<sup>-m</sup> (default epsilon=1,3)
   + --strict
