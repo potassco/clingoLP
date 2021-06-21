@@ -11,8 +11,8 @@ def test_example():
 
 
 def test_wanko_example():
-    p = subprocess.run(['clingoLP', 'wanko.lp', '0',
-                        '--outf=2', '--quiet=1,0,0', '--show-lp-solution'], stdout=PIPE, stderr=PIPE)
+    p = subprocess.run(['clingoLP', 'src/tests/wanko.lp', '0',
+                        '--outf=2', '--show-lp-solution'], stdout=PIPE, stderr=PIPE)
     out = json.loads(p.stdout)
     print("out", out)
-    assert (out['Call'][0]['Models']['Number'] == 3)
+    assert (out['Models']['Number'] == 3)
