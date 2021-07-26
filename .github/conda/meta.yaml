@@ -1,0 +1,37 @@
+{% set name = 'clingo-lp' %}
+{% set dev = not environ.get('BUILD_RELEASE', false) %}
+{% set version = environ.get('VERSION_NUMBER') %}
+{% set revision = environ.get('GITHUB_SHA', 'wip') %}
+{% set build = environ.get('BUILD_NUMBER', "0") %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  path: ../..
+
+requirements:
+  host:
+  - python >=3.5
+  - pip
+  - clingo >=5.5.0
+  run:
+  - python >=3.5
+  - clingo >=5.5.0
+  - lpsolve55
+
+build:
+  number: {{ build }}
+  noarch: python
+  script: python setup.py install --single-version-externally-managed --record record.txt
+  entry_points: ['clingoLP = clingolp.app:main_clingo']
+
+
+about:
+  home: https://potassco.org/
+  license: MIT
+  summary: clingo with theory propagator for linear programming
+  license_file: LICENSE
+  doc_url: https://potassco.org/
+  dev_url: https://github.com/potassco/clingoLP
