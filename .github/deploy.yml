@@ -1,0 +1,59 @@
+# do not edit the workflows, they are generated from this file
+pip:
+    pure: True
+    version: |
+        version = None
+        with open('setup.py') as fh:
+            for line in fh:
+                m = match(r'''[ ]*version[ ]*=[ ]*['"]([0-9]+\.[0-9]+\.[0-9]+)(\.post[0-9]+)?['"]''', line)
+                if m is not None:
+                    version = m.group(1)
+    build_depends_release: |
+        python3 -m pip install --user clingo
+    build_depends_dev: |
+        python3 -m pip install --user --extra-index-url https://test.pypi.org/simple/ clingo
+
+conda:
+    package_name:
+        'clingo-lp'
+    os: 
+        - 'ubuntu-latest'
+    channels_release:
+        - 'potassco'
+        - 'conda-forge'
+    channels_dev:
+        - 'potassco'
+        - 'potassco/label/dev'
+        - 'conda-forge'
+    version: |
+        version = None
+        with open('setup.py') as fh:
+            for line in fh:
+                m = match(r'''[ ]*version[ ]*=[ ]*['"]([0-9]+\.[0-9]+\.[0-9]+)(\.post[0-9]+)?['"]''', line)
+                if m is not None:
+                    version = m.group(1)
+        assert version is not None
+    meta:
+      url: https://github.com/potassco/clingoLP/archive/v{{ version }}.tar.gz
+      git_url: https://github.com/potassco/clingoLP.git
+      requirements:
+        host:
+          - python >=3.5
+          - pip
+          - clingo >=5.5.0
+        run:
+          - python >=3.5
+          - clingo >=5.5.0
+          - lpsolve55
+      build:
+        noarch: python
+        script: 'python setup.py install --single-version-externally-managed --record record.txt'
+        entry_points:
+          - clingoLP = clingolp.app:main_clingo
+      about:
+        home: https://potassco.org/
+        license: MIT
+        summary: clingo with theory propagator for linear programming
+        license_file: LICENSE
+        doc_url: https://potassco.org/
+        dev_url: https://github.com/potassco/clingoLP
