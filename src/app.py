@@ -8,7 +8,7 @@ from clingolp import lp_theory
 class Application:
     def __init__(self):
         self.program_name = 'clingoLP'
-        self.version = "0.1.1"
+        self.version = "0.2.0"
         self.prop = None
         self.lp_assignment = None
         self.show_flag = Flag(False)

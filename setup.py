@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='clingo-lp',
-    version='0.1.1',
+    version='0.2.0',
     url='http://github.com/potassco/clingoLP/',
     license='MIT',
     description='clingo[LP] extends the ASP solver clingo with linear constraints as dealt with in Linear Programming (LP).',
