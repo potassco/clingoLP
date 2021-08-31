@@ -6,16 +6,20 @@
 
 Install via conda:
 
-+ `conda install -c potassco -c conda-forge clingo-lp`
+```sh
+conda install -c potassco -c conda-forge clingo-lp
+```
 
 ## CPLEX
 
-The clingolp propagator requires an LP solver.
+The clingoLP propagator requires an LP solver.
 The default is [lpsolve](https://sourceforge.net/projects/lpsolve/) but [cplex](https://www.ibm.com/support/knowledgecenter/SSSA5P_12.7.0/ilog.odms.cplex.help/CPLEX/GettingStarted/topics/set_up/Python_setup.html) can be used optionally.
 
 IBM also provides a promotional version of `cplex` that is sufficient to solve small problems limited to 1000 variables and 1000 constraints.
 
-+ `conda install -c ibmdecisionoptimization cplex`
+```sh
+conda install -c ibmdecisionoptimization cplex`
+```
 
 To solve larger problems, you need to use the full version of CPLEX Studio.
 
@@ -31,35 +35,38 @@ LP constraints can be expressed as follows:
 
 To avoid syntax clashes, you must quote `"` real numbers. Instead of `1.5` write `"1.5"`.
 
-## General usage of clingo[LP]
+## Usage
 
-Basic call:
-`clingoLP <encoding> <instance> <options>`
+```txt
+clingoLP [number] [options] [files]
+
+Options:
+
+  --lp-solver=<arg>       : Set LP solver
+      <arg>: {lps,cplx} (default lp-solver=lps)
+  --[no-]show-lp-solution : Show LP solution and value of objective function
+  --accuracy=n            : Set decimal position of LP solver accuracy (default accuracy=3)
+  --epsilon=n,m           : Set epsilon to convert lhs > k into lhs >= k+n*10^-m (default epsilon=1,3)
+  --[no-]trace            : Enables detailed output of theory propagation
+  --core-confl=n          : Searches for core conflicts if at least n% of the theory atoms are decided
+                            (default core-confl=20)
+  --prop-heur=n           : Starts a solve call of the LP solver if at least n% of the theory atoms are decided
+                            (default prop-heur=0)
+  --[no-]ilp              : Sets the LP solver to solve an Integer Linear Programming (ILP) problem
+```
 
 Example:
-`clingoLP example_encoding.lp example_instance.lp --show-lp-solution 0`
 
-+ Options
-  + --show-lp-solution
-    + Show LP solution and value of objective function
-  + --lp-solver=cplx
-    + Selects a LP solver (default lp-solver=lps)
-  + --accuracy=n
-    + Prints n decimal positions (default accuracy=3)
-  + --epsilon=n,m
-    + Set epsilon to convert lhs > k into lhs >= k+n*10<sup>-m</sup> (default epsilon=1,3)
-  + --trace
-    + Enables detailed output of theory propagation
-  + --core-confl=n
-    + Searches for core conflicts if at least n% of the theory atoms are decided (default core-confl=20)
-  + --prop-heur=n
-    + Starts a solve call of the LP solver if at least n% of the theory atoms are decided (default prop-heur=0)
-  + --ilp
-    + Sets the LP solver to solve an Integer Linear Programming (ILP) problem
-  
-  + All clingo options
-  + Number of solutions controlled via clingo
+```sh
+clingoLP 0 --show-lp-solution example_encoding.lp example_instance.lp
+```
+
+For more options you can ask for help as follows::
+
+```sh
+clingoLP --help
+```
   
 ## Publication
 
-+ [Clingo goes linear constraints over reals and integers, Janhunen, T., Kaminski, R., Ostrowski, M., Schellhorn, S., Wanko, P., Schaub, T. (2017),  TPLP, 17(5-6), 872–888.](https://www.cs.uni-potsdam.de/wv/publications/DBLP_journals/tplp/JanhunenKOSWS17.pdf)
+[Clingo goes linear constraints over reals and integers, Janhunen, T., Kaminski, R., Ostrowski, M., Schellhorn, S., Wanko, P., Schaub, T. (2017),  TPLP, 17(5-6), 872–888.](https://www.cs.uni-potsdam.de/wv/publications/DBLP_journals/tplp/JanhunenKOSWS17.pdf)
