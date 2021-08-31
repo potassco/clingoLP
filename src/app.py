@@ -15,7 +15,6 @@ class Application:
         self.lp_solver = "lps"
         self.accuracy = 3
         self.epsilon = 1*10**-3
-        self.strict_flag = Flag(False)
         self.trace_flag = Flag(False)
         self.core_confl = 20
         self.prop_heur = 0
@@ -42,10 +41,6 @@ class Application:
         options.add(group, "epsilon",
                     "Set epsilon to convert lhs > k into lhs >= k+n*10^-m (default epsilon=1,3)",
                     self.parse_epsilon, argument="n,m")
-
-        options.add_flag(group, "strict",
-                         "Enables strict semantics",
-                         self.strict_flag)
 
         options.add_flag(group, "trace",
                          "Enables detailed output of theory propagation",
