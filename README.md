@@ -61,7 +61,7 @@ Example:
 clingoLP 0 --show-lp-solution example_encoding.lp example_instance.lp
 ```
 
-For more options you can ask for help as follows::
+For more options you can ask for help as follows:
 
 ```sh
 clingoLP --help
