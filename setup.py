@@ -6,7 +6,7 @@ setup(
     url='http://github.com/potassco/clingoLP/',
     license='MIT',
     description='clingo[LP] extends the ASP solver clingo with linear constraints as dealt with in Linear Programming (LP).',
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     long_description_content_type="text/markdown",
     author='Sebastian Schellhorn',
     packages=['clingolp'],

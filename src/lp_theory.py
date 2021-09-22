@@ -1,3 +1,4 @@
+import sys
 import time
 from typing import List, Sequence, cast
 
@@ -22,7 +23,7 @@ except ModuleNotFoundError as e:
 
 if not cplx_found and not lps_found:
     print('no lp solver found')
-    exit()
+    sys.exit()
 
 theory = """
 #theory lp {
@@ -127,16 +128,24 @@ class Propagator:
             if solver == 'lps':
                 if self.lp.get_time() != 'Error' and self.lp.get_time() != 'Unsat':
                     times = self.lp.get_time()
-                    self.times = (self.times[0] + times[0], self.times[1] + times[1], self.times[2] + times[2],
-                                  self.times[3] + times[3], self.times[4] + times[4], self.times[5] + times[5])
+                    self.times = (self.times[0] + times[0],
+                                  self.times[1] + times[1],
+                                  self.times[2] + times[2],
+                                  self.times[3] + times[3],
+                                  self.times[4] + times[4],
+                                  self.times[5] + times[5])
                 self.times_print = 'LP solver calls: ' + \
                     str(self.times[0]) + '   Time lp_solve :  ' + \
                     str(self.times[1]) + '\n'
             elif solver == 'cplx':
                 if self.lp.get_time() != 'Error' and self.lp.get_time() != 'Unsat':
                     times = self.lp.get_time()
-                    self.times = (self.times[0] + times[0], self.times[1] + times[1], self.times[2] + times[2],
-                                  self.times[3] + times[3], self.times[4] + times[4], self.times[5] + times[5])
+                    self.times = (self.times[0] + times[0],
+                                  self.times[1] + times[1],
+                                  self.times[2] + times[2],
+                                  self.times[3] + times[3],
+                                  self.times[4] + times[4],
+                                  self.times[5] + times[5])
                 self.times_print = 'LP solver calls: ' + \
                     str(self.times[0]) + '   Time cplex :  ' + \
                     str(self.times[1]) + '\n'
@@ -191,7 +200,7 @@ class Propagator:
                 self.__varpos, self.__bounds, self.__ilp)
         except:
             print('No wrapper class of ', self.__solver, ' found!')
-            exit()
+            sys.exit()
 
     def __init__(self, _ctrl, solver, show, accuracy, epsilon, trace, core_confl, prop_heur, ilp, debug):
         self.__var_ta = {}              # {abs(lit) : [cnum]}
@@ -225,13 +234,13 @@ class Propagator:
                 self.__solver = 'cplx'
             else:
                 print('cplex not found')
-                exit()
+                sys.exit()
         else:
             if lps_found:
                 self.__solver = 'lps'
             else:
                 print('lpsolve not found')
-                exit()
+                sys.exit()
 
         self.__show = show
         self.__accuracy = accuracy
@@ -439,8 +448,8 @@ class Propagator:
         '''
         if str(num)[0] != '"':
             return float(num.number)
-        else:
-            return float(str(num)[1:-1])
+
+        return float(str(num)[1:-1])
 
     def __solve(self, state: State):
         ''' solve call
@@ -465,8 +474,16 @@ class Propagator:
         state.lp.add_constr(clist)
         state.lp.solve_lp()
         state.save_assignment(self.__accuracy)
-        state.save_stats(self.__solver, self.__debug, self.__initcalls, self.__inittime, self.__propcalls,
-                         self.__proptime, self.__undocalls, self.__undotime, self.__checkcalls, self.__checktime)
+        state.save_stats(self.__solver,
+                         self.__debug,
+                         self.__initcalls,
+                         self.__inittime,
+                         self.__propcalls,
+                         self.__proptime,
+                         self.__undocalls,
+                         self.__undotime,
+                         self.__checkcalls,
+                         self.__checktime)
 
     def __get_constrs(self, state: State, cnums):
         ''' get constraints wrt current assignment

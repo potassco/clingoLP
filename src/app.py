@@ -20,9 +20,6 @@ class Application:
         self.prop_heur = 0
         self.ilp_flag = Flag(False)
 
-    def __on_model(self, m):
-        pass
-
     def register_options(self, options):
         group = "Clingo.LP Options"
         options.add(group, "lp-solver",
@@ -58,14 +55,13 @@ class Application:
         options.add_flag(group, "ilp",
                          "Sets the LP solver to solve an Integer Linear Programming (ILP) problem",
                          self.ilp_flag)
-        pass
 
     def parse_solver_option(self, string):
-        if string == 'lps' or string == 'cplx':
+        if string in ['lps', 'cplx']:
             self.lp_solver = string
             return True
-        else:
-            return False
+
+        return False
 
     def parse_accuracy(self, string):
         try:
@@ -161,7 +157,9 @@ class Application:
 
         ctrl.ground([("base", [])])
 
-        with ctrl.solve(on_model=self.__on_model, on_statistics=self.__on_statistics, yield_=True) as handle:
+        with ctrl.solve(on_model=self.__on_model,
+                        on_statistics=self.__on_statistics,
+                        yield_=True) as handle:
             for _model in handle:
                 pass
 
