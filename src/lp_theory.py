@@ -1,16 +1,12 @@
-import clingo
-from typing import Sequence, List
-from typing import List, Sequence, Optional, MutableMapping, Tuple, Set, cast
-from clingo.propagator import (
-    PropagateInit, PropagateControl, Assignment, Trail)
-from clingo.theory_atoms import TheoryTerm, TheoryAtom, TheoryElement
-import sys
 import time
+from typing import List, Sequence, cast
 
 from clingo import ast
-
+from clingo.ast import AST, ProgramBuilder, Transformer, parse_files
 from clingo.control import Control
-from clingo.ast import parse_files, AST, ProgramBuilder, Transformer
+from clingo.propagator import (Assignment, PropagateControl, PropagateInit)
+from clingo.theory_atoms import (TheoryAtom, TheoryElement, TheoryTerm,
+                                 TheoryTermType)
 
 try:
     from clingolp.cplx import cplx
@@ -307,7 +303,7 @@ class Propagator:
         rhs = atom.guard[1]
         rel = atom.guard[0]
         for elem in lhs:
-            if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
+            if elem.terms[0].type == TheoryTermType.Function and elem.terms[0].name == '*':
                 koef = self.__calc_bound(elem.terms[0].arguments[0])
                 if elem.terms[0].arguments[1].arguments == []:
                     varname = elem.terms[0].arguments[1].name
@@ -334,7 +330,7 @@ class Propagator:
                     self.__constr_clit[n].append(aclit)
                     self.__constr_clit[n] = list(set(self.__constr_clit[n]))
                 tmp = {}
-                if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
+                if elem.terms[0].type == TheoryTermType.Function and elem.terms[0].name == '*':
                     tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
                 else:
                     tmp[clit] = 1
@@ -372,7 +368,7 @@ class Propagator:
 
     def __set_objective(self, init: PropagateInit, obj: List[TheoryElement], pol):
         for elem in obj:
-            if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
+            if str(elem.terms[0].type) == TheoryTermType.Function and elem.terms[0].name == '*':
                 koef = self.__calc_bound(elem.terms[0].arguments[0])
                 if elem.terms[0].arguments[1].arguments == []:
                     varname = elem.terms[0].arguments[1].name
@@ -393,7 +389,7 @@ class Propagator:
                 self.__lits_total.add(aclit)
                 self.__obj_cond_lit.add(aclit)
                 tmp = {}
-                if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
+                if elem.terms[0].type == TheoryTermType.Function and elem.terms[0].name == '*':
                     tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
                 else:
                     tmp[clit] = 1
