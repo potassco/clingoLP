@@ -334,7 +334,7 @@ class Propagator:
                     self.__constr_clit[n].append(aclit)
                     self.__constr_clit[n] = list(set(self.__constr_clit[n]))
                 tmp = {}
-                if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
+                if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
                     tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
                 else:
                     tmp[clit] = 1
@@ -372,7 +372,7 @@ class Propagator:
 
     def __set_objective(self, init: PropagateInit, obj: List[TheoryElement], pol):
         for elem in obj:
-            if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
+            if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
                 koef = self.__calc_bound(elem.terms[0].arguments[0])
                 if elem.terms[0].arguments[1].arguments == []:
                     varname = elem.terms[0].arguments[1].name
@@ -393,7 +393,7 @@ class Propagator:
                 self.__lits_total.add(aclit)
                 self.__obj_cond_lit.add(aclit)
                 tmp = {}
-                if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
+                if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
                     tmp[clit] = self.__calc_bound(elem.terms[0].arguments[0])
                 else:
                     tmp[clit] = 1
