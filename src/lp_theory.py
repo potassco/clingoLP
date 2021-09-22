@@ -120,6 +120,21 @@ class Propagator:
             self.times = (0, 0, 0, 0, 0, 0)
             self.times_print = ''
 
+        def add_aux(self, control: PropagateControl, cnum, lit):
+            ''' adds an literal l to choose on l or -l for disjunction of '!='
+            '''
+            if self.active_cnum[cnum][2] == 0:
+                self.active_cnum[cnum][2] = 1
+                nlit = control.add_literal()
+                # print("__add_aux, cnum", cnum, "lit", lit, "new_lit:", nlit)
+                control.add_watch(nlit)
+                control.add_watch(-nlit)
+                self.eqlit[cnum] = nlit
+                self.eqlit_inv[nlit] = cnum
+                self.active_cnum[cnum][0] += 1
+                control.add_clause([lit, nlit], lock=True)
+                self.total_lits += 1
+
         def save_assignment(self, accuracy):
             self.current_assignment = self.lp.get_solution(accuracy)
 
@@ -134,9 +149,8 @@ class Propagator:
                                   self.times[3] + times[3],
                                   self.times[4] + times[4],
                                   self.times[5] + times[5])
-                self.times_print = 'LP solver calls: ' + \
-                    str(self.times[0]) + '   Time lp_solve :  ' + \
-                    str(self.times[1]) + '\n'
+                self.times_print = f"LP solver calls: {self.times[0]}" + \
+                    f"   Time lp_solve : {self.times[1]}\n"
             elif solver == 'cplx':
                 if self.lp.get_time() != 'Error' and self.lp.get_time() != 'Unsat':
                     times = self.lp.get_time()
@@ -146,12 +160,15 @@ class Propagator:
                                   self.times[3] + times[3],
                                   self.times[4] + times[4],
                                   self.times[5] + times[5])
-                self.times_print = 'LP solver calls: ' + \
-                    str(self.times[0]) + '   Time cplex :  ' + \
-                    str(self.times[1]) + '\n'
+                self.times_print = f"LP solver calls: {self.times[0]}" + \
+                    f"   Time cplex : {self.times[1]}\n"
             if debug > 0:
-                self.times_print = self.times_print + '\n' + 'Calls init: ' + str(initcalls) + '      Time init:  ' + str(inittime) + '\n' + 'Calls propagate: ' + str(propcalls) + '      Time propagate:  ' + str(proptime) + '\n' + 'Calls undo: ' + str(undocalls) + '      Time undo:  ' + str(
-                    undotime) + '\n' + 'Calls add: ' + str(self.times[2]) + '      Time add:  ' + str(self.times[3]) + '\n' + 'Calls reset: ' + str(self.times[4]) + '      Time reset:  ' + str(self.times[5]) + '\n' + 'Calls check: ' + str(checkcalls) + '      Time check:  ' + str(checktime)
+                self.times_print += f"\nCalls init: {initcalls}   Time init: {inittime}" + \
+                    f"\nCalls propagate: {propcalls}   Time propagate: {proptime}" + \
+                    f"\nCalls undo: {undocalls}   Time undo: {undotime}" + \
+                    f"\nCalls add: {self.times[2]}   Time add: {self.times[3]}" + \
+                    f"\nCalls reset: {self.times[4]}   Time reset: {self.times[5]}" + \
+                    f"\nCalls check: {checkcalls}   Time check: {checktime}"
 
         def print_assignment(self, show):
             # uncomment to see evolution of solving and stats
@@ -436,20 +453,12 @@ class Propagator:
                 tmp = self.__calc_bound(args[0])/self.__calc_bound(args[1])
         elif len(args) == 1:
             if args[0].arguments == []:
-                tmp = -self.__get_number(args[0])
+                tmp = -term_to_float(args[0])
             else:
                 tmp = -self.__calc_bound(args[0])
         else:
-            tmp = self.__get_number(expr)
+            tmp = term_to_float(expr)
         return tmp
-
-    def __get_number(self, num):
-        ''' cast gringo number or string to float
-        '''
-        if str(num)[0] != '"':
-            return float(num.number)
-
-        return float(str(num)[1:-1])
 
     def __solve(self, state: State):
         ''' solve call
@@ -502,7 +511,7 @@ class Propagator:
         rel = constr[1]
         b = constr[2]
         for varname in constr[0]:
-            weight = self.__get_weight(state.cond_trail, constr[0][varname])
+            weight = get_weight(state.cond_trail, constr[0][varname])
             if varname in self.__varpos:
                 trow[varname] = weight
         if state.active_cnum[cnum][1] < 0:
@@ -548,23 +557,9 @@ class Propagator:
         for varname in self.__varpos:
             wopt.setdefault(varname, 0)
         for varname, val in self.__objective.items():
-            weight = self.__get_weight(
-                state.oclit_trail, val)
+            weight = get_weight(state.oclit_trail, val)
             wopt[varname] = weight
         return wopt
-
-    def __get_weight(self, clits, w_list):
-        ''' calculates weight of variable wrt a state
-        '''
-        tmp = 0
-        for weight in w_list:
-            if not isinstance(weight, dict):
-                tmp = tmp + weight
-            else:
-                for clit in weight:
-                    if clit in clits:
-                        tmp = tmp + weight[clit]
-        return tmp
 
     def propagate(self, control: PropagateControl, changes: Sequence[int]):
 
@@ -673,7 +668,7 @@ class Propagator:
                     state.active_cnum[cnum][1] = 1
                     rel = self.__constr[cnum][1][1]
                     if rel == '!=':
-                        self.__add_aux(control, state, cnum, lit)
+                        state.add_aux(control, cnum, lit)
                     if state.active_cnum[cnum][0] == 0:
                         state.recent_active.append(cnum)
             if -lit in self.__lit_ta_body:
@@ -684,7 +679,7 @@ class Propagator:
                     state.active_cnum[cnum][1] = -1
                     rel = self.__constr[cnum][1][1]
                     if rel == '=':
-                        self.__add_aux(control, state, cnum, lit)
+                        state.add_aux(control, cnum, lit)
                     if state.active_cnum[cnum][0] == 0:
                         state.recent_active.append(cnum)
             if var in self.__clit_constr:
@@ -704,21 +699,6 @@ class Propagator:
                 state.active_oclit -= 1
                 if state.active_oclit == 0:
                     state.oclit_recent_active = 1
-
-    def __add_aux(self, control: PropagateControl, state: State, cnum, lit):
-        ''' adds an literal l to choose on l or -l for disjunction of '!='
-        '''
-        if state.active_cnum[cnum][2] == 0:
-            state.active_cnum[cnum][2] = 1
-            nlit = control.add_literal()
-            # print("__add_aux, cnum", cnum, "lit", lit, "new_lit:", nlit)
-            control.add_watch(nlit)
-            control.add_watch(-nlit)
-            state.eqlit[cnum] = nlit
-            state.eqlit_inv[nlit] = cnum
-            state.active_cnum[cnum][0] += 1
-            control.add_clause([lit, nlit], lock=True)
-            state.total_lits += 1
 
     def __check_consistency(self, control: PropagateControl, state: State):
         ''' returns false if lp system inconsistent else true
@@ -797,3 +777,26 @@ class Propagator:
                         clause.append(clit)
         clause = [x for x in clause if abs(x) > 1]
         return clause
+
+
+def term_to_float(term):
+    ''' cast gringo number or string to float
+    '''
+    if term.type == TheoryTermType.Number:
+        return float(term.number)
+
+    return float(str(term)[1:-1])
+
+
+def get_weight(clits, w_list):
+    ''' calculates weight of variable wrt a state
+    '''
+    tmp = 0
+    for weight in w_list:
+        if not isinstance(weight, dict):
+            tmp += weight
+        else:
+            for clit, val in weight.items():
+                if clit in clits:
+                    tmp += val
+    return tmp
