@@ -5,9 +5,10 @@ import json
 
 def test_example():
     p = subprocess.run(['clingoLP', 'example_encoding.lp', 'example_instance.lp', '0',
-                        '--outf=2', '--quiet=1,0,0', '--show-lp-solution'], stdout=PIPE, stderr=PIPE)
+                        '--outf=2', '--quiet=1,0,0', '--show-lp-solution'],
+                       stdout=PIPE, stderr=PIPE)
     out = json.loads(p.stdout)
-    assert (out['Call'][0]['Result'] == 'SATISFIABLE')
+    assert out['Call'][0]['Result'] == 'SATISFIABLE'
 
 
 def test_wanko_example():
@@ -15,4 +16,4 @@ def test_wanko_example():
                         '--outf=2', '--show-lp-solution'], stdout=PIPE, stderr=PIPE)
     out = json.loads(p.stdout)
     print("out", out)
-    assert (out['Models']['Number'] == 3)
+    assert out['Models']['Number'] == 3
