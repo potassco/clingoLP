@@ -129,7 +129,7 @@ class cplx:
         if self.is_sat():
             time_return = (self.__scalls, self.__stime, self.__addcalls,
                            self.__addtime, self.__resetcalls, self.__resettime)
-        elif self.is_sat() == None:
+        elif self.is_sat() is None:
             time_return = 'Error'
         else:
             time_return = 'Unsat'
@@ -153,7 +153,7 @@ class cplx:
                 for i, var in enumerate(self.__var_mapping.keys()):
                     sdict[var] = round(round(slist[i], 1), 0)
             slist = (obj, sdict)
-        elif self.is_sat() == None:
+        elif self.is_sat() is None:
             slist = 'Error'
         else:
             slist = 'Unsat'

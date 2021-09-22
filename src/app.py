@@ -104,7 +104,7 @@ class Application:
     def print_model(self, model, printer):
 
         for sym in model.symbols(shown=True):
-            sys.stdout.write("{} ".format(sym))
+            sys.stdout.write(f"{sym} ")
 
         sys.stdout.write("\n")
 
@@ -116,11 +116,11 @@ class Application:
             else:
                 sys.stdout.write("LP solution: ")
                 (opt, values) = ass
-                sys.stdout.write("optimum={}\n".format(opt))
+                sys.stdout.write(f"optimum={opt}\n")
 
-                for name in values:
+                for name, val in values.items():
                     sys.stdout.write(
-                        "{}={} ".format(name, values[name]))
+                        f"{name}={val} ")
                 sys.stdout.write("\n")
 
             self.prop.print_solve_stats(model.thread_id)
@@ -129,7 +129,7 @@ class Application:
 
     def __on_model(self, model):
         ass = self.prop.assignment(model.thread_id)
-        if ass != None:
+        if ass is not None:
             (opt, values) = ass
             model.extend(
                 [clingo.Function('_lp_optimum', [clingo.String(str(opt))])])

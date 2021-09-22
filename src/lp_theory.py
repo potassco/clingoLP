@@ -193,7 +193,7 @@ class Propagator:
             print('No wrapper class of ', self.__solver, ' found!')
             exit()
 
-    def __init__(self, ctrl, solver, show, accuracy, epsilon, trace, core_confl, prop_heur, ilp, debug):
+    def __init__(self, _ctrl, solver, show, accuracy, epsilon, trace, core_confl, prop_heur, ilp, debug):
         self.__var_ta = {}              # {abs(lit) : [cnum]}
         self.__lit_ta = {}              # {lit : [cnum]}
         self.__lit_ta_body = {}         # {lit : [cnum]}
@@ -260,8 +260,8 @@ class Propagator:
             if term.name == 'dom':
                 self.__lp_domain(atom)
         if len(self.__obj_cond_lit) == 0:
-            for varname in self.__objective:
-                weight = sum(self.__objective[varname])
+            for varname, val in self.__objective.items():
+                weight = sum(val)
                 if weight != 0:
                     self.__wopt[varname] = weight
         self.__lits_total_num = len(self.__lits_total)
@@ -368,7 +368,7 @@ class Propagator:
 
     def __set_objective(self, init: PropagateInit, obj: List[TheoryElement], pol):
         for elem in obj:
-            if str(elem.terms[0].type) == TheoryTermType.Function and elem.terms[0].name == '*':
+            if elem.terms[0].type == TheoryTermType.Function and elem.terms[0].name == '*':
                 koef = self.__calc_bound(elem.terms[0].arguments[0])
                 if elem.terms[0].arguments[1].arguments == []:
                     varname = elem.terms[0].arguments[1].name
@@ -530,9 +530,9 @@ class Propagator:
         wopt = {}
         for varname in self.__varpos:
             wopt.setdefault(varname, 0)
-        for varname in self.__objective:
+        for varname, val in self.__objective.items():
             weight = self.__get_weight(
-                state.oclit_trail, self.__objective[varname])
+                state.oclit_trail, val)
             wopt[varname] = weight
         return wopt
 
@@ -580,7 +580,7 @@ class Propagator:
         self.__time = self.__time + end-start
         return True
 
-    def undo(self, thread_id: int, assignment: Assignment, changes: Sequence[int]):
+    def undo(self, thread_id: int, _assignment: Assignment, changes: Sequence[int]):
         start = time.process_time()
         state: Propagator.State = self.__state(thread_id)
         lpid = state.stack[-1][1]
@@ -614,13 +614,13 @@ class Propagator:
         self.__undocalls += 1
         self.__time = self.__time + end-start
 
-    def check(self, control: PropagateControl):
+    def check(self, _control: PropagateControl):
         start = time.process_time()
-        state: Propagator.State = self.__state(control.thread_id)
         end = time.process_time()
         self.__checktime += end-start
         self.__checkcalls += 1
         self.__time = self.__time + end-start
+        # state: Propagator.State = self.__state(control.thread_id)
         # times = state.lp.get_time()
         # print ''
         # if self.__debug > 0:
