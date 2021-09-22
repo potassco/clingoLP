@@ -307,7 +307,7 @@ class Propagator:
         rhs = atom.guard[1]
         rel = atom.guard[0]
         for elem in lhs:
-            if str(elem.terms[0].type) == "Function" and str(elem.terms[0].name) == '*':
+            if str(elem.terms[0].type) == "TheoryTermType.Function" and str(elem.terms[0].name) == '*':
                 koef = self.__calc_bound(elem.terms[0].arguments[0])
                 if elem.terms[0].arguments[1].arguments == []:
                     varname = elem.terms[0].arguments[1].name
