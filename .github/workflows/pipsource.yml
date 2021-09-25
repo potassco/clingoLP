@@ -51,7 +51,7 @@ jobs:
       if: ${{ github.event.inputs.wip == 'false' }}
       run: python3 .github/pipsource.py --release
 
-    - name: Publish package to TestPyPI (release)
+    - name: Publish package to PyPI (release)
       if: ${{ github.event.inputs.wip == 'false'}}
       uses: pypa/gh-action-pypi-publish@master
       with:
