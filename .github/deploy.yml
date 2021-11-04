@@ -22,8 +22,8 @@ conda:
         - 'potassco'
         - 'conda-forge'
     channels_dev:
-        - 'potassco'
         - 'potassco/label/dev'
+        - 'potassco'
         - 'conda-forge'
     version: |
         version = None
